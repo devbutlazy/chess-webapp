@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     BOT_TOKEN: str  # Telegram bot token
     BOT_ADMINS_ID: list[int]  # Telegram bot's admins IDs'
     DB_NAME: str  # Database name
-    STOCKFISH_PATH: str # Path to Stokfish binary
+    STOCKFISH_PATH: str  # Path to Stokfish binary
 
     @property
     def DB_URL(self) -> str:
