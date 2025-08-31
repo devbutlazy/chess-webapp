@@ -7,12 +7,14 @@ engine = create_async_engine(
     settings.DB_URL,
 )
 
+
 async def init_db() -> None:
     """
     Initialize database via Base-model metadata
     """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
 
 async def drop_table_by_name(table_name: str) -> None:
     """
