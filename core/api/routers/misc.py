@@ -22,7 +22,7 @@ async def check_user(request: Request) -> JSONResponse:
 
     async with UserRepository() as repo:
         user = await repo.get_one(user_id=user_id)
-        return JSONResponse({"allowed": bool(user)  })
+        return JSONResponse({"allowed": bool(user)})
 
 
 @router.post("/register_user/")
@@ -36,15 +36,16 @@ async def register_user(request: Request) -> JSONResponse:
     async with UserRepository() as repository:
         existing_user = await repository.get_one(user_id=user_id)
         if existing_user:
-            return JSONResponse({
-                "success": True,
-                "message": f"User {user_id} already registered"
-            })
+            return JSONResponse(
+                {"success": True, "message": f"User {user_id} already registered"}
+            )
 
         new_user = await repository.add_one(user_id)
-        return JSONResponse({
-            "success": True,
-            "message": f"User {user_id} registered successfully",
-            "user_id": new_user.user_id,
-            "registration_date": new_user.registration_date.isoformat()
-        })
+        return JSONResponse(
+            {
+                "success": True,
+                "message": f"User {user_id} registered successfully",
+                "user_id": new_user.user_id,
+                "registration_date": new_user.registration_date.isoformat(),
+            }
+        )

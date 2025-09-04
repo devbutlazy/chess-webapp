@@ -9,6 +9,7 @@ from core.database.models.user import UserORM
 
 from typing import Self, Type
 
+
 class UserRepository(BaseRepository):
     def __init__(self):
         self.session: async_sessionmaker
@@ -19,7 +20,6 @@ class UserRepository(BaseRepository):
 
     async def __aexit__(self, exc_type, exc_value, exc_tb) -> None:  # noqa
         return await self.session().close()
-    
 
     async def get_one(self, **kwargs) -> Type[UserORM] | None:
         """
@@ -27,8 +27,8 @@ class UserRepository(BaseRepository):
         :param kwargs: id
         :return: UserORM
         """
-        user_id  = kwargs.get("user_id")
-        if not user_id :
+        user_id = kwargs.get("user_id")
+        if not user_id:
             raise ValueError("User ID not specified")
 
         async with self.session() as session:
@@ -46,13 +46,12 @@ class UserRepository(BaseRepository):
 
         async with self.session() as session:
             new_user = UserORM(
-                user_id=user_id,
-                registration_date=datetime.now(timezone.utc)
+                user_id=user_id, registration_date=datetime.now(timezone.utc)
             )
             session.add(new_user)
 
             await session.commit()
-            await session.refresh(new_user) 
+            await session.refresh(new_user)
 
             return new_user
 
@@ -67,9 +66,11 @@ class UserRepository(BaseRepository):
             raise ValueError("User ID not specified")
 
         async with self.session() as session:
-            if not (user := await session.execute(
-                select(UserORM).where(UserORM.user_id == user_id)
-            )):
+            if not (
+                user := await session.execute(
+                    select(UserORM).where(UserORM.user_id == user_id)
+                )
+            ):
                 return f"No user with user_id {user_id} found"
 
             user_instance = user.scalars().first()
@@ -81,7 +82,7 @@ class UserRepository(BaseRepository):
 
             result = await session.execute(select(UserORM).order_by(UserORM.id))
             users = result.scalars().all()
-            
+
             for index, u in enumerate(users):
                 u.id = index + 1
 
