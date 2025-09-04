@@ -8,7 +8,7 @@ from core.database.models.base import Base
 
 class UserORM(Base):
     """
-    User children-ORM class for managing each user in database 
+    User children-ORM class for managing each user in database
     """
 
     __tablename__ = "users"
