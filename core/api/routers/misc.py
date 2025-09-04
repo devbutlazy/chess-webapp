@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get("/", response_class=HTMLResponse)
 async def index() -> HTMLResponse:
-    with open("frontend/html/base.html", "r", encoding="utf-8") as file:
+    with open("frontend/html/index.html", "r", encoding="utf-8") as file:
         return HTMLResponse(file.read())
 
 
