@@ -1,0 +1,100 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Chess_Board.svg/1024px-Chess_Board.svg.png') center/cover no-repeat;
+}
+
+.menu-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    width: 320px;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin: 12px 0;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-new {
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+    color: #fff;
+}
+
+.btn-leaderboard {
+    background: linear-gradient(135deg, #34d399, #059669);
+    color: #fff;
+}
+
+.btn-settings {
+    background: linear-gradient(135deg, #facc15, #d97706);
+    color: #fff;
+}
+
+.btn-exit {
+    background: linear-gradient(135deg, #f87171, #dc2626);
+    color: #fff;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+.status-green { color: #34d399; }
+.status-red { color: #f87171; }
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease-out;
+}
+
+.overlay h1 {
+    font-size: 8rem;
+    color: white;
+    animation: pulse 1s infinite;
+}
+
+.overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.9; }
+}
