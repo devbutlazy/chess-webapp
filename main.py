@@ -8,6 +8,7 @@ from uvicorn.server import Server
 
 from core.api.routers.misc import router as misc_router
 
+
 def init_fastapi_routers(app: FastAPI) -> None:
     """
     Include routers from the presentation layerCommandStart
@@ -16,6 +17,7 @@ def init_fastapi_routers(app: FastAPI) -> None:
     :return: None
     """
     app.include_router(misc_router)
+
 
 # async def start_telegram_bot() -> None:
 #     """
@@ -30,10 +32,11 @@ def init_fastapi_routers(app: FastAPI) -> None:
 #     dp = Dispatcher()
 
 #     await dp.start_polling(bot)
-    
+
+
 async def main() -> None:
     app = FastAPI(docs_url=None, redoc_url=None)
-    
+
     app.mount("/js", StaticFiles(directory="frontend/js"), name="js")
     app.mount("/css", StaticFiles(directory="frontend/css"), name="css")
 
@@ -41,7 +44,8 @@ async def main() -> None:
     server = Server(config=config)
 
     init_fastapi_routers(app)
-    await asyncio.gather(server.serve()) # start_telegram_bot()
+    await asyncio.gather(server.serve())  # start_telegram_bot()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
