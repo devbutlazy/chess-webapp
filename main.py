@@ -18,6 +18,7 @@ def init_fastapi_routers(app: FastAPI) -> None:
     """
     app.include_router(misc_router)
 
+
 # async def start_telegram_bot() -> None:
 #     """
 #     Start the Telegram bot.
@@ -31,9 +32,11 @@ def init_fastapi_routers(app: FastAPI) -> None:
 #     dp = Dispatcher()
 
 #     await dp.start_polling(bot)
-    
+
+
 async def main() -> None:
     app = FastAPI(docs_url=None, redoc_url=None)
+
 
     app.mount("/js", StaticFiles(directory="frontend/js"), name="js")
     app.mount("/css", StaticFiles(directory="frontend/css"), name="css")

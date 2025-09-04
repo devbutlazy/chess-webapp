@@ -5,10 +5,12 @@ from core.database.repositories.user import UserRepository
 
 router = APIRouter()
 
+
 @router.get("/", response_class=HTMLResponse)
 async def index() -> HTMLResponse:
     with open("frontend/html/base.html", "r", encoding="utf-8") as file:
         return HTMLResponse(file.read())
+
 
 @router.post("/check_user/")
 async def check_user(request: Request) -> JSONResponse:
@@ -21,6 +23,7 @@ async def check_user(request: Request) -> JSONResponse:
     async with UserRepository() as repo:
         user = await repo.get_one(user_id=user_id)
         return JSONResponse({"allowed": bool(user)  })
+
 
 @router.post("/register_user/")
 async def register_user(request: Request) -> JSONResponse:
