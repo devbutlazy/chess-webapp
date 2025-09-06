@@ -1,0 +1,22 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    overflow-x: hidden;
+}
+
+#chessboard {
+    width: 90vw;
+    max-width: 500px;
+    margin: 20px auto;
+}
+
+@media (max-width: 600px) {
+    #chessboard {
+        width: 95vw;
+    }
+}

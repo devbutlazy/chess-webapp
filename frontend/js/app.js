@@ -18,24 +18,88 @@ function showOverlayAnimation(callback) {
 
     const elapsed = Date.now() - start;
     const waitTime = Math.max(0, 3000 - elapsed);
-
     setTimeout(finish, waitTime);
 }
 
-async function showLoggedInUI(user) {
+function renderMenu(title, buttons) {
     const app = document.getElementById("app");
-    const template = document.getElementById("logged-template");
-    app.innerHTML = template.innerHTML;
-
-    const statusText = app.querySelector("#status-text");
-    statusText.innerHTML = `♟ ${user.first_name || user.username || "Player"}`;
-    statusText.classList.add("status-green");
+    app.innerHTML = `
+        <div class="menu-container">
+            <h1>${title}</h1>
+            ${buttons.map(btn => `
+                <button class="btn ${btn.class}" data-action="${btn.action}" ${btn.disabled ? "disabled" : ""}>
+                    ${btn.text}
+                </button>
+            `).join("")}
+        </div>
+    `;
 
     app.querySelectorAll("[data-action]").forEach(btn => {
-        btn.addEventListener("click", () => {
-            tg.sendData(JSON.stringify({ action: btn.dataset.action }));
-        });
+        btn.addEventListener("click", () => handleAction(btn.dataset.action));
     });
+}
+
+function showMainMenu(user) {
+    renderMenu(`♟ ${user.first_name || user.username || "Player"}`, [
+        { text: "New Game", class: "btn-new", action: "new" },
+        { text: "Leaderboard", class: "btn-leaderboard", action: "leaderboard" },
+        { text: "Settings", class: "btn-settings", action: "settings" },
+    ]);
+}
+
+function showGameModeMenu(user) {
+    renderMenu("Choose Mode", [
+        { text: "VS Bot", class: "btn-new", action: "vs-bot" },
+        { text: "VS User (Coming Soon)", class: "btn-leaderboard", action: "vs-user", disabled: true },
+        { text: "Back", class: "btn-exit", action: "back-main" }
+    ]);
+}
+
+function showDifficultyMenu(user) {
+    renderMenu("Choose Difficulty", [
+        { text: "Easy", class: "btn-new", action: "difficulty-easy" },
+        { text: "Medium", class: "btn-new", action: "difficulty-medium" },
+        { text: "Hard", class: "btn-new", action: "difficulty-hard" },
+        { text: "Impossible", class: "btn-new", action: "difficulty-impossible" },
+        { text: "Back", class: "btn-exit", action: "back-mode" }
+    ]);
+}
+
+async function startGame(user, difficulty) {
+    window.location.href = `/chess.html`;
+}
+
+let currentUser = null;
+
+function handleAction(action) {
+    switch (action) {
+        case "new":
+            showGameModeMenu(currentUser);
+            break;
+        case "vs-bot":
+            showDifficultyMenu(currentUser);
+            break;
+        case "back-main":
+            showMainMenu(currentUser);
+            break;
+        case "back-mode":
+            showGameModeMenu(currentUser);
+            break;
+        case "difficulty-easy":
+            startGame(currentUser, "easy");
+            break;
+        case "difficulty-medium":
+            startGame(currentUser, "medium");
+            break;
+        case "difficulty-hard":
+            startGame(currentUser, "hard");
+            break;
+        case "difficulty-impossible":
+            startGame(currentUser, "impossible");
+            break;
+        default:
+            tg.sendData(JSON.stringify({ action }));
+    }
 }
 
 async function registerUser(user) {
@@ -59,6 +123,8 @@ async function init() {
         return;
     }
 
+    currentUser = user;
+
     const resp = await fetch("/check_user/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -66,12 +132,9 @@ async function init() {
     });
 
     const { allowed } = await resp.json();
+    if (!allowed) await registerUser(user);
 
-    if (!allowed) {
-        await registerUser(user);
-    }
-
-    showOverlayAnimation(() => showLoggedInUI(user));
+    showOverlayAnimation(() => showMainMenu(user));
 }
 
 init();

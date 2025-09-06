@@ -19,7 +19,6 @@ def init_fastapi_routers(app: FastAPI) -> None:
     """
     app.include_router(misc_router)
 
-
 # async def start_telegram_bot() -> None:
 #     """
 #     Start the Telegram bot.
@@ -40,6 +39,8 @@ async def main() -> None:
 
     app.mount("/js", StaticFiles(directory="frontend/js"), name="js")
     app.mount("/css", StaticFiles(directory="frontend/css"), name="css")
+    app.mount("/assets", StaticFiles(directory="frontend/assets"), name="assets")
+    # app.mount("/", StaticFiles(directory="frontend/html", html=True), name="html")
 
     config = Config(app=app, host="0.0.0.0", port=8080, loop="asyncio")
     server = Server(config=config)
