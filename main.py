@@ -19,6 +19,7 @@ def init_fastapi_routers(app: FastAPI) -> None:
     """
     app.include_router(misc_router)
 
+
 # async def start_telegram_bot() -> None:
 #     """
 #     Start the Telegram bot.

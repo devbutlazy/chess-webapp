@@ -11,11 +11,13 @@ async def index() -> HTMLResponse:
     with open("frontend/html/index.html", "r", encoding="utf-8") as file:
         return HTMLResponse(file.read())
 
+
 @router.get("/chess.html", response_class=HTMLResponse)
 async def chess_page():
     with open("frontend/html/chess.html", encoding="utf-8") as f:
         return HTMLResponse(f.read())
-    
+
+
 @router.post("/check_user/")
 async def check_user(request: Request) -> JSONResponse:
     data = await request.json()
@@ -53,4 +55,3 @@ async def register_user(request: Request) -> JSONResponse:
                 "registration_date": new_user.registration_date.isoformat(),
             }
         )
-
