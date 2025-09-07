@@ -6,7 +6,8 @@ from fastapi.staticfiles import StaticFiles
 from uvicorn.config import Config
 from uvicorn.server import Server
 
-from core.api.routers.misc import router as misc_router
+from core.api.routers.basic import router as misc_router
+from core.api.routers.chess import router as chess_router
 from core.database import init_db
 
 
@@ -18,7 +19,7 @@ def init_fastapi_routers(app: FastAPI) -> None:
     :return: None
     """
     app.include_router(misc_router)
-
+    app.include_router(chess_router)
 
 # async def start_telegram_bot() -> None:
 #     """

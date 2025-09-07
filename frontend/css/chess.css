@@ -56,3 +56,7 @@ body {
     transform: translate(-50%, -50%);
     pointer-events: none;
 }
+
+.selected-square {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}

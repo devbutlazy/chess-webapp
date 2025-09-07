@@ -1,57 +1,112 @@
-var game = new Chess();
+const userId = window.localStorage.getItem("user_id") || Math.floor(Math.random() * 1000000);
+window.localStorage.setItem("user_id", userId);
 
-var board = Chessboard('chessboard', {
-    position: 'start',
-    draggable: true,
-    pieceTheme: '/assets/chesspieces/{piece}.png',
-    onDragStart: onDragStart,
-    onDrop: onDrop,
-    onSnapEnd: onSnapEnd,
-    onMouseoverSquare: onMouseoverSquare,
-    onMouseoutSquare: onMouseoutSquare
-});
+let currentDifficulty = window.localStorage.getItem("difficulty") || "medium";
 
-function removeHighlights() {
-    $('#chessboard .square-55d63').removeClass('highlight-square highlight-move highlight-capture');
-}
+let game = new Chess();
+let board = null;
+let selectedSquare = null;
 
-function onDragStart(source, piece, position, orientation) {
-    if (game.game_over()) return false;
-    if ((game.turn() === 'w' && piece.startsWith('b')) ||
-        (game.turn() === 'b' && piece.startsWith('w'))) {
-        return false;
-    }
-
-    removeHighlights();
-    highlightMoves(source);
-}
-
-function onDrop(source, target) {
-    removeHighlights();
-
-    var move = game.move({
-        from: source,
-        to: target,
-        promotion: 'q'
+async function startGame() {
+    const resp = await fetch("/start_game/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            user_id: parseInt(userId),
+            mode: "bot",
+            difficulty: currentDifficulty
+        }),
     });
 
-    if (move === null) return 'snapback';
+    const data = await resp.json();
+    if (!data.success) {
+        alert("Could not start game: " + (data.detail || data.message));
+        return;
+    }
+
+    game.load(data.fen);
+    board.position(data.fen);
 }
 
-function onSnapEnd() {
+function removeHighlights() {
+    $('#chessboard .square-55d63').removeClass('highlight-square highlight-move highlight-capture selected-square');
+}
+
+async function handleSquareClick(square) {
+    if (!selectedSquare) {
+        const piece = game.get(square);
+        if (!piece) return;
+        if ((game.turn() === 'w' && piece.color === 'b') || (game.turn() === 'b' && piece.color === 'w')) return;
+
+        selectedSquare = square;
+        removeHighlights();
+        $('#chessboard .square-' + square).addClass('selected-square');
+        highlightMoves(square);
+        return;
+    }
+
+    if (selectedSquare === square) {
+        selectedSquare = null;
+        removeHighlights();
+        return;
+    }
+
+    const move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
+
+    if (move === null) {
+        const piece = game.get(square);
+        if (piece && piece.color === game.turn()) {
+            selectedSquare = square;
+            removeHighlights();
+            $('#chessboard .square-' + square).addClass('selected-square');
+            highlightMoves(square);
+        }
+        return;
+    }
+
     board.position(game.fen());
-}
-
-function onMouseoverSquare(square, piece) {
-    highlightMoves(square);
-}
-
-function onMouseoutSquare(square, piece) {
+    selectedSquare = null;
     removeHighlights();
+
+    try {
+        const resp = await fetch("/make_move/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: parseInt(userId),
+                move: move.san
+            }),
+        });
+
+        const data = await resp.json();
+
+        if (!data.success) {
+            alert("Move rejected: " + (data.detail || data.message));
+            game.undo();
+            board.position(game.fen());
+            return;
+        }
+
+        game.load(data.fen);
+        board.position(data.fen);
+
+        if (data.bot_move) {
+            console.log("Bot played:", data.bot_move);
+        }
+
+        if (data.game_over) {
+            alert("Game over! Result: " + data.result);
+        }
+    } catch (err) {
+        console.error("Server error:", err);
+        game.undo();
+        board.position(game.fen());
+    }
 }
+
 
 function highlightMoves(square) {
-    var moves = game.moves({ square: square, verbose: true });
+    const moves = game.moves({ square: square, verbose: true });
     if (moves.length === 0) return;
 
     $('#chessboard .square-' + square).addClass('highlight-square');
@@ -65,3 +120,18 @@ function highlightMoves(square) {
         }
     });
 }
+
+$(document).ready(async function () {
+    board = Chessboard('chessboard', {
+        position: 'start',
+        draggable: false,
+        pieceTheme: '/assets/chesspieces/{piece}.png'
+    });
+
+    $('#chessboard').on('click', '.square-55d63', function () {
+        const square = $(this).attr('data-square');
+        handleSquareClick(square);
+    });
+
+    await startGame();
+});
