@@ -19,12 +19,13 @@ DIFFICULTY_PRESETS: Dict[str, dict] = {
 
 games: Dict[int, dict] = {}
 
+
 @router.post("/start_game/")
 async def start_game(data: ChessGameForm) -> dict:
     if data.mode == "bot":
         if not data.difficulty:
             raise HTTPException(400, detail="Difficulty required for bot mode")
-        
+
         preset = DIFFICULTY_PRESETS[data.difficulty]
         board = chess.Board()
 
@@ -38,7 +39,7 @@ async def start_game(data: ChessGameForm) -> dict:
             "fen": board.fen(),
             "turn": "white",
         }
-    
+
     raise HTTPException(400, detail="User vs User not implemented yet")
 
 
@@ -48,7 +49,7 @@ async def make_move(data: MoveForm) -> dict:
 
     if not game:
         raise HTTPException(404, detail="No active game found")
-    
+
     board: chess.Board = game["board"]
     engine: chess.engine.SimpleEngine = game["engine"]
     preset: dict = game["preset"]
@@ -62,14 +63,14 @@ async def make_move(data: MoveForm) -> dict:
             move = board.parse_uci(data.move)
         except ValueError:
             raise HTTPException(400, detail="Invalid move format")
-        
+
     if move not in board.legal_moves:
         raise HTTPException(400, detail="Illegal move")
-    
+
     board.push(move)
     if board.is_game_over():
         return {"success": True, "fen": board.fen(), "winner": board.result()}
-    
+
     if preset["depth"]:
         result = await engine.play(board, chess.engine.Limit(depth=preset["depth"]))
     else:

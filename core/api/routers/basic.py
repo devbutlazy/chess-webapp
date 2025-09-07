@@ -5,6 +5,7 @@ from core.database.repositories.user import UserRepository
 
 router = APIRouter()
 
+
 @router.get("/", response_class=HTMLResponse)
 async def index() -> HTMLResponse:
     return HTMLResponse(open("frontend/html/index.html", encoding="utf-8").read())
