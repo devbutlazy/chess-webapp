@@ -5,10 +5,9 @@ import chess.engine
 from fastapi import APIRouter, HTTPException
 
 from core.api.schemas.schemas import ChessGameForm, MoveForm
+from core.config.config import settings
 
 router = APIRouter()
-
-STOCKFISH_PATH = "stockfish/stockfish-windows-x86-64-avx2.exe"
 
 DIFFICULTY_PRESETS: Dict[str, dict] = {
     "easy": {"skill": 1, "depth": 8, "time": 0.1},
@@ -29,7 +28,7 @@ async def start_game(data: ChessGameForm) -> dict:
         preset = DIFFICULTY_PRESETS[data.difficulty]
         board = chess.Board()
 
-        _, engine = await chess.engine.popen_uci(STOCKFISH_PATH)
+        _, engine = await chess.engine.popen_uci(settings.STOCKFISH_PATH)
         await engine.configure({"Skill Level": preset["skill"]})
         games[data.user_id] = {"board": board, "engine": engine, "preset": preset}
 

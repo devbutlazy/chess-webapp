@@ -1,1 +1,9 @@
+aiosqlite
+sqlite3
+
+fastapi
 sqlalchemy
+python-chess
+
+pydantic
+pydantic-settings
