@@ -32,6 +32,7 @@ def _parse_move(move_str: str, board: chess.Board) -> chess.Move:
             continue
     raise HTTPException(status_code=400, detail="Invalid move format")
 
+
 @router.post("/start_game/")
 async def start_game(data: ChessGameForm) -> dict:
     if data.mode == "bot":
@@ -46,6 +47,7 @@ async def start_game(data: ChessGameForm) -> dict:
 
         if data.color == "random":
             import random
+
             player_color = random.choice(["white", "black"])
         else:
             player_color = data.color
@@ -58,12 +60,16 @@ async def start_game(data: ChessGameForm) -> dict:
         }
 
         bot_move = None
-        
+
         if player_color == "black":
             if preset["depth"]:
-                result = await engine.play(board, chess.engine.Limit(depth=preset["depth"]))
+                result = await engine.play(
+                    board, chess.engine.Limit(depth=preset["depth"])
+                )
             else:
-                result = await engine.play(board, chess.engine.Limit(time=preset["time"]))
+                result = await engine.play(
+                    board, chess.engine.Limit(time=preset["time"])
+                )
             bot_move = result.move
             board.push(bot_move)
 
@@ -94,7 +100,7 @@ async def make_move(data: MoveForm) -> dict:
             "success": False,
             "message": "Game already over",
             "fen": board.fen(),
-            "result": board.result()
+            "result": board.result(),
         }
 
     move = _parse_move(data.move, board)
@@ -108,7 +114,7 @@ async def make_move(data: MoveForm) -> dict:
             "success": True,
             "fen": board.fen(),
             "game_over": True,
-            "result": board.result()
+            "result": board.result(),
         }
 
     limit = (
@@ -128,4 +134,3 @@ async def make_move(data: MoveForm) -> dict:
         "game_over": board.is_game_over(),
         "result": board.result() if board.is_game_over() else None,
     }
-
