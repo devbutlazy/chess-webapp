@@ -65,11 +65,23 @@ function showDifficultyMenu(user) {
     ]);
 }
 
-async function startGame(user, difficulty) {
+async function startGame(user, difficulty, color) {
+    localStorage.setItem("difficulty", difficulty);
+    localStorage.setItem("color", color);
+
     window.location.href = `/chess.html`;
 }
 
 let currentUser = null;
+
+function showColorMenu(user, difficulty) {
+    renderMenu("Choose Color", [
+        { text: "White ♙", class: "btn-new", action: `color-white-${difficulty}` },
+        { text: "Black ♟", class: "btn-new", action: `color-black-${difficulty}` },
+        { text: "Random 🎲", class: "btn-new", action: `color-random-${difficulty}` },
+        { text: "Back", class: "btn-exit", action: `back-difficulty` }
+    ]);
+}
 
 function handleAction(action) {
     switch (action) {
@@ -85,19 +97,29 @@ function handleAction(action) {
         case "back-mode":
             showGameModeMenu(currentUser);
             break;
+        case "back-difficulty":
+            showDifficultyMenu(currentUser);
+            break;
         case "difficulty-easy":
-            startGame(currentUser, "easy");
+            showColorMenu(currentUser, "easy");
             break;
         case "difficulty-medium":
-            startGame(currentUser, "medium");
+            showColorMenu(currentUser, "medium");
             break;
         case "difficulty-hard":
-            startGame(currentUser, "hard");
+            showColorMenu(currentUser, "hard");
             break;
         case "difficulty-impossible":
-            startGame(currentUser, "impossible");
+            showColorMenu(currentUser, "impossible");
             break;
+
+        // Colors
         default:
+            if (action.startsWith("color-")) {
+                const [, color, difficulty] = action.split("-");
+                startGame(currentUser, difficulty, color);
+                break;
+            }
             tg.sendData(JSON.stringify({ action }));
     }
 }

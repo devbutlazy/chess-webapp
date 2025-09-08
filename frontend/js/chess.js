@@ -2,6 +2,12 @@ const userId = window.localStorage.getItem("user_id") || Math.floor(Math.random(
 window.localStorage.setItem("user_id", userId);
 
 let currentDifficulty = window.localStorage.getItem("difficulty") || "medium";
+let playerColor = window.localStorage.getItem("color") || "white";
+
+if (playerColor === "random") {
+    playerColor = Math.random() > 0.5 ? "white" : "black";
+    localStorage.setItem("color", playerColor);
+}
 
 let game = new Chess();
 let board = null;
@@ -14,7 +20,8 @@ async function startGame() {
         body: JSON.stringify({
             user_id: parseInt(userId),
             mode: "bot",
-            difficulty: currentDifficulty
+            difficulty: currentDifficulty,
+            color: playerColor
         }),
     });
 
@@ -24,9 +31,24 @@ async function startGame() {
         return;
     }
 
-    game.load(data.fen);
-    board.position(data.fen);
+    game.reset();
+
+    board = Chessboard('chessboard', {
+        position: game.fen(),
+        orientation: playerColor,
+        draggable: false,
+        pieceTheme: '/assets/chesspieces/{piece}.png'
+    });
+
+    if (data.bot_move) {
+        setTimeout(() => {
+            game.load(data.fen);
+            board.position(data.fen);
+            console.log("Bot played:", data.bot_move);
+        }, 600); 
+    }
 }
+
 
 function removeHighlights() {
     $('#chessboard .square-55d63').removeClass('highlight-square highlight-move highlight-capture selected-square');
@@ -52,7 +74,6 @@ async function handleSquareClick(square) {
     }
 
     const move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
-
     if (move === null) {
         const piece = game.get(square);
         if (piece && piece.color === game.turn()) {
@@ -87,23 +108,24 @@ async function handleSquareClick(square) {
             return;
         }
 
-        game.load(data.fen);
-        board.position(data.fen);
+        setTimeout(() => {
+            game.load(data.fen);
+            board.position(data.fen);
 
-        if (data.bot_move) {
-            console.log("Bot played:", data.bot_move);
-        }
+            if (data.bot_move) {
+                console.log("Bot played:", data.bot_move);
+            }
 
-        if (data.game_over) {
-            alert("Game over! Result: " + data.result);
-        }
+            if (data.game_over) {
+                alert("Game over! Result: " + data.result);
+            }
+        }, 500);
     } catch (err) {
         console.error("Server error:", err);
         game.undo();
         board.position(game.fen());
     }
 }
-
 
 function highlightMoves(square) {
     const moves = game.moves({ square: square, verbose: true });
@@ -122,12 +144,6 @@ function highlightMoves(square) {
 }
 
 $(document).ready(async function () {
-    board = Chessboard('chessboard', {
-        position: 'start',
-        draggable: false,
-        pieceTheme: '/assets/chesspieces/{piece}.png'
-    });
-
     $('#chessboard').on('click', '.square-55d63', function () {
         const square = $(this).attr('data-square');
         handleSquareClick(square);
