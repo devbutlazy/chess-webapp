@@ -115,6 +115,8 @@ async def make_move(data: MoveForm) -> dict:
             "fen": board.fen(),
             "game_over": True,
             "result": board.result(),
+            "reason": board.outcome().termination.name if board.outcome() else None,
+            "bot_move": None,  
         }
 
     limit = (
@@ -133,4 +135,5 @@ async def make_move(data: MoveForm) -> dict:
         "bot_move": bot_move.uci(),
         "game_over": board.is_game_over(),
         "result": board.result() if board.is_game_over() else None,
+        "reason": board.outcome().termination.name if board.outcome() else None,
     }

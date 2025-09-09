@@ -44,14 +44,31 @@ async function startGame() {
         setTimeout(() => {
             game.load(data.fen);
             board.position(data.fen);
+            highlightCheck();
             console.log("Bot played:", data.bot_move);
-        }, 600); 
+        }, 600);
     }
 }
 
-
 function removeHighlights() {
     $('#chessboard .square-55d63').removeClass('highlight-square highlight-move highlight-capture selected-square');
+}
+
+function highlightCheck() {
+    $('#chessboard .square-55d63').removeClass('king-in-check');
+    if (game.in_check()) {
+        const turn = game.turn();
+        const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        for (let rank = 1; rank <= 8; rank++) {
+            for (let file of files) {
+                const square = file + rank;
+                const piece = game.get(square);
+                if (piece && piece.type === 'k' && piece.color === turn) {
+                    $('#chessboard .square-' + square).addClass('king-in-check');
+                }
+            }
+        }
+    }
 }
 
 async function handleSquareClick(square) {
@@ -64,12 +81,14 @@ async function handleSquareClick(square) {
         removeHighlights();
         $('#chessboard .square-' + square).addClass('selected-square');
         highlightMoves(square);
+        highlightCheck();
         return;
     }
 
     if (selectedSquare === square) {
         selectedSquare = null;
         removeHighlights();
+        highlightCheck();
         return;
     }
 
@@ -81,6 +100,7 @@ async function handleSquareClick(square) {
             removeHighlights();
             $('#chessboard .square-' + square).addClass('selected-square');
             highlightMoves(square);
+            highlightCheck();
         }
         return;
     }
@@ -88,6 +108,7 @@ async function handleSquareClick(square) {
     board.position(game.fen());
     selectedSquare = null;
     removeHighlights();
+    highlightCheck();
 
     try {
         const resp = await fetch("/make_move/", {
@@ -105,25 +126,44 @@ async function handleSquareClick(square) {
             alert("Move rejected: " + (data.detail || data.message));
             game.undo();
             board.position(game.fen());
+            highlightCheck();
             return;
         }
 
         setTimeout(() => {
             game.load(data.fen);
             board.position(data.fen);
+            highlightCheck();
 
             if (data.bot_move) {
                 console.log("Bot played:", data.bot_move);
             }
 
             if (data.game_over) {
-                alert("Game over! Result: " + data.result);
+                let resultMsg = "";
+
+                if (data.result === "1-0") {
+                    resultMsg = (playerColor === "white") ? "You win! 🎉" : "You lose. ❌";
+                } else if (data.result === "0-1") {
+                    resultMsg = (playerColor === "black") ? "You win! 🎉" : "You lose. ❌";
+                } else if (data.result === "1/2-1/2") {
+                    resultMsg = "Draw 🤝";
+                }
+
+                if (data.reason) {
+                    resultMsg += " (" + data.reason.replaceAll("_", " ").toLowerCase() + ")";
+                }
+
+                setTimeout(() => {
+                    alert(resultMsg);
+                }, 600); 
             }
         }, 500);
     } catch (err) {
         console.error("Server error:", err);
         game.undo();
         board.position(game.fen());
+        highlightCheck();
     }
 }
 
