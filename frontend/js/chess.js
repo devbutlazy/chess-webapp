@@ -13,6 +13,12 @@ let game = new Chess();
 let board = null;
 let selectedSquare = null;
 
+const moveSound = new Audio("/assets/sounds/move-self.mp3");
+function playMoveSound() {
+    moveSound.currentTime = 0;
+    moveSound.play().catch(() => {});
+}
+
 async function startGame() {
     const resp = await fetch("/start_game/", {
         method: "POST",
@@ -45,6 +51,7 @@ async function startGame() {
             game.load(data.fen);
             board.position(data.fen);
             highlightCheck();
+            playMoveSound();
             console.log("Bot played:", data.bot_move);
         }, 600);
     }
@@ -109,6 +116,7 @@ async function handleSquareClick(square) {
     selectedSquare = null;
     removeHighlights();
     highlightCheck();
+    playMoveSound();
 
     try {
         const resp = await fetch("/make_move/", {
@@ -134,6 +142,7 @@ async function handleSquareClick(square) {
             game.load(data.fen);
             board.position(data.fen);
             highlightCheck();
+            playMoveSound();
 
             if (data.bot_move) {
                 console.log("Bot played:", data.bot_move);
