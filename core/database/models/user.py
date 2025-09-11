@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Integer, String, Boolean, DateTime, ForeignKey, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database.models.base import Base
 
@@ -20,6 +20,39 @@ class UserORM(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    # TODO: Additional information one-to-many with statistics, and other data
+    games: Mapped[list["ChessGameORM"]] = relationship(
+        "ChessGameORM",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
 
-    repr_cols_num: int = 3
+    repr_cols_num: int = 4
+
+class ChessGameORM(Base):
+    """
+    ORM for storing chess game state per user.
+    """
+
+    __tablename__ = "chess_games"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+
+    fen: Mapped[str] = mapped_column(String, nullable=False)
+    player_color: Mapped[str] = mapped_column(String, nullable=False)
+    difficulty: Mapped[str] = mapped_column(String, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    user = relationship("UserORM", back_populates="games")
+
+    repr_cols_num: int = 9

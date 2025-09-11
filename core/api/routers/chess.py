@@ -1,11 +1,14 @@
 from typing import Dict
 
+import random
 import chess
 import chess.engine
 from fastapi import APIRouter, HTTPException
 
-from core.api.schemas.schemas import ChessGameForm, MoveForm
 from core.config.config import settings
+from core.api.schemas.schemas import ChessGameForm, MoveForm, LoadGameForm
+from core.database.repositories.chess import ChessGameRepository
+
 
 router = APIRouter()
 
@@ -15,9 +18,6 @@ DIFFICULTY_PRESETS: Dict[str, dict] = {
     "hard": {"skill": 15, "depth": 18, "time": 0.7},
     "impossible": {"skill": 20, "depth": None, "time": 1.0},
 }
-
-games: Dict[int, dict] = {}
-
 
 def _parse_move(move_str: str, board: chess.Board) -> chess.Move:
     """
@@ -45,33 +45,40 @@ async def start_game(data: ChessGameForm) -> dict:
         _, engine = await chess.engine.popen_uci(settings.STOCKFISH_PATH)
         await engine.configure({"Skill Level": preset["skill"]})
 
-        if data.color == "random":
-            import random
+        player_color = (
+            data.color if data.color != "random" else random.choice(["white", "black"])
+        )
 
-            player_color = random.choice(["white", "black"])
-        else:
-            player_color = data.color
+        async with ChessGameRepository() as repository:
+            game = await repository.create_game(
+                user_id=data.user_id,
+                fen=board.fen(),
+                player_color=player_color,
+                difficulty=data.difficulty,
+            )
 
-        games[data.user_id] = {
-            "board": board,
-            "engine": engine,
-            "preset": preset,
-            "player_color": player_color,
-        }
+        # games[data.user_id] = {
+        #     "board": board,
+        #     "engine": engine,
+        #     "preset": preset,
+        #     "player_color": player_color,
+        # }
 
         bot_move = None
 
         if player_color == "black":
-            if preset["depth"]:
-                result = await engine.play(
-                    board, chess.engine.Limit(depth=preset["depth"])
-                )
-            else:
-                result = await engine.play(
-                    board, chess.engine.Limit(time=preset["time"])
-                )
+            limit = (
+                chess.engine.Limit(depth=preset["depth"])
+                if preset["depth"]
+                else chess.engine.Limit(time=preset["time"])
+            )
+
+            result = await engine.play(board, limit)
             bot_move = result.move
             board.push(bot_move)
+
+            async with ChessGameRepository() as repository:
+                await repository.update_fen(game.id, board.fen())
 
         return {
             "success": True,
@@ -80,6 +87,7 @@ async def start_game(data: ChessGameForm) -> dict:
             "turn": "white" if board.turn == chess.WHITE else "black",
             "player_color": player_color,
             "bot_move": bot_move.uci() if bot_move else None,
+            "game_id": game.id,
         }
 
     raise HTTPException(400, detail="User vs User not implemented yet")
@@ -87,15 +95,18 @@ async def start_game(data: ChessGameForm) -> dict:
 
 @router.post("/make_move/")
 async def make_move(data: MoveForm) -> dict:
-    game = games.get(data.user_id)
-    if not game:
-        raise HTTPException(status_code=404, detail="No active game found")
+    async with ChessGameRepository() as repository:
+        game = await repository.get_game(data.game_id)
+        if not game or not game.is_active:
+            raise HTTPException(404, detail="No active game found")
 
-    board: chess.Board = game["board"]
-    engine: chess.engine.SimpleEngine = game["engine"]
-    preset: dict = game["preset"]
+    board = chess.Board(game.fen)
+    preset = DIFFICULTY_PRESETS[game.difficulty]
 
     if board.is_game_over():
+        async with ChessGameRepository() as repository:
+            await repository.deactivate_game(game.id)
+
         return {
             "success": False,
             "message": "Game already over",
@@ -110,6 +121,10 @@ async def make_move(data: MoveForm) -> dict:
     board.push(move)
 
     if board.is_game_over():
+        async with ChessGameRepository() as repository:
+            await repository.update_fen(game.id, board.fen())
+            await repository.deactivate_game(game.id)
+
         return {
             "success": True,
             "fen": board.fen(),
@@ -118,6 +133,9 @@ async def make_move(data: MoveForm) -> dict:
             "reason": board.outcome().termination.name if board.outcome() else None,
             "bot_move": None,
         }
+
+    _, engine = await chess.engine.popen_uci(settings.STOCKFISH_PATH)
+    await engine.configure({"Skill Level": preset["skill"]})
 
     limit = (
         chess.engine.Limit(depth=preset["depth"])
@@ -129,6 +147,9 @@ async def make_move(data: MoveForm) -> dict:
     bot_move = result.move
     board.push(bot_move)
 
+    async with ChessGameRepository() as repository:
+        await repository.update_fen(game.id, board.fen())
+
     return {
         "success": True,
         "fen": board.fen(),
@@ -136,4 +157,37 @@ async def make_move(data: MoveForm) -> dict:
         "game_over": board.is_game_over(),
         "result": board.result() if board.is_game_over() else None,
         "reason": board.outcome().termination.name if board.outcome() else None,
+    }
+
+
+@router.get("/get_active_games/")
+async def get_active_games(user_id: int) -> list:
+    async with ChessGameRepository() as repository:
+        games = await repository.get_active_games(user_id)
+
+    return [
+        {
+            "game_id": game.id,
+            "fen": game.fen,
+            "player_color": game.player_color,
+            "difficulty": game.difficulty,
+        }
+        for game in games
+    ]
+
+
+@router.post("/load_game/")
+async def load_game(data: LoadGameForm) -> dict:  
+    async with ChessGameRepository() as repository:
+        game = await repository.get_game(data.game_id)
+
+    if not game:
+        raise HTTPException(404, detail="Game not found")
+
+    return {
+        "success": True,
+        "game_id": game.id,
+        "fen": game.fen,
+        "player_color": game.player_color,
+        "difficulty": game.difficulty,
     }

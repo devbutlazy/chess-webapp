@@ -12,6 +12,7 @@ if (playerColor === "random") {
 let game = new Chess();
 let board = null;
 let selectedSquare = null;
+let gameId = null;
 
 const moveSound = new Audio("/assets/sounds/move-self.mp3");
 function playMoveSound() {
@@ -36,6 +37,8 @@ async function startGame() {
         alert("Could not start game: " + (data.detail || data.message));
         return;
     }
+
+    gameId = data.game_id;
 
     game.reset();
 
@@ -123,7 +126,7 @@ async function handleSquareClick(square) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                user_id: parseInt(userId),
+                game_id: gameId,
                 move: move.san
             }),
         });
