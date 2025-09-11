@@ -1,6 +1,14 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
+function playClickSound() {
+    const audio = new Audio("/assets/sounds/click.mp3");
+    audio.currentTime = 0;
+    audio.play().catch(err => {
+        console.warn("Sound play blocked:", err);
+    });
+}
+
 function showOverlayAnimation(callback) {
     const overlay = document.createElement("div");
     overlay.className = "overlay";
@@ -35,7 +43,10 @@ function renderMenu(title, buttons) {
     `;
 
     app.querySelectorAll("[data-action]").forEach(btn => {
-        btn.addEventListener("click", () => handleAction(btn.dataset.action));
+        btn.addEventListener("click", () => {
+            playClickSound();
+            handleAction(btn.dataset.action);
+        });
     });
 }
 
@@ -113,7 +124,6 @@ function handleAction(action) {
             showColorMenu(currentUser, "impossible");
             break;
 
-        // Colors
         default:
             if (action.startsWith("color-")) {
                 const [, color, difficulty] = action.split("-");
