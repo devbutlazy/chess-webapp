@@ -14,5 +14,6 @@ class MoveForm(BaseModel):
     game_id: int
     move: str
 
+
 class LoadGameForm(BaseModel):
     game_id: int

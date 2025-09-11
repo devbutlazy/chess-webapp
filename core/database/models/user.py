@@ -24,10 +24,11 @@ class UserORM(Base):
         "ChessGameORM",
         back_populates="user",
         cascade="all, delete-orphan",
-        lazy="selectin"
+        lazy="selectin",
     )
 
     repr_cols_num: int = 4
+
 
 class ChessGameORM(Base):
     """
@@ -50,7 +51,10 @@ class ChessGameORM(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
 
     user = relationship("UserORM", back_populates="games")

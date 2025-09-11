@@ -19,6 +19,7 @@ DIFFICULTY_PRESETS: Dict[str, dict] = {
     "impossible": {"skill": 20, "depth": None, "time": 1.0},
 }
 
+
 def _parse_move(move_str: str, board: chess.Board) -> chess.Move:
     """
     Try parsing the move string as SAN first, then UCI.
@@ -177,7 +178,7 @@ async def get_active_games(user_id: int) -> list:
 
 
 @router.post("/load_game/")
-async def load_game(data: LoadGameForm) -> dict:  
+async def load_game(data: LoadGameForm) -> dict:
     async with ChessGameRepository() as repository:
         game = await repository.get_game(data.game_id)
 

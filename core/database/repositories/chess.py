@@ -19,27 +19,28 @@ class ChessGameRepository(BaseRepository):
     async def __aexit__(self, exc_type, exc_value, exc_tb) -> None:  # noqa
         return await self.session().close()
 
-    async def create_game(self, user_id: int, fen: str, player_color: str, difficulty: str) -> ChessGameORM:
+    async def create_game(
+        self, user_id: int, fen: str, player_color: str, difficulty: str
+    ) -> ChessGameORM:
         async with self.session() as session:
             new_game = ChessGameORM(
                 user_id=user_id,
                 fen=fen,
                 player_color=player_color,
                 difficulty=difficulty,
-                is_active=True
+                is_active=True,
             )
 
             session.add(new_game)
             await session.commit()
             await session.refresh(new_game)
             return new_game
-        
+
     async def get_active_games(self, user_id: int) -> List[ChessGameORM]:
         async with self.session() as session:
             result = await session.execute(
                 select(ChessGameORM).where(
-                    ChessGameORM.user_id == user_id,
-                    ChessGameORM.is_active == True
+                    ChessGameORM.user_id == user_id, ChessGameORM.is_active == True
                 )
             )
 
