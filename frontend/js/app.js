@@ -53,7 +53,7 @@ function renderMenu(title, buttons) {
 function showMainMenu(user) {
     renderMenu(`♟ ${user.first_name || user.username || "Player"}`, [
         { text: "New Game", class: "btn-new", action: "new" },
-        { text: "Load Game", class: "btn-new", action: "load-game" }, // ✅ NEW
+        { text: "Load Game", class: "btn-new", action: "load-game" },
         { text: "Leaderboard", class: "btn-leaderboard", action: "leaderboard" },
         { text: "Settings", class: "btn-settings", action: "settings" },
     ]);
@@ -77,15 +77,6 @@ function showDifficultyMenu(user) {
     ]);
 }
 
-async function startGame(user, difficulty, color) {
-    localStorage.setItem("difficulty", difficulty);
-    localStorage.setItem("color", color);
-
-    window.location.href = `/chess.html`;
-}
-
-let currentUser = null;
-
 function showColorMenu(user, difficulty) {
     renderMenu("Choose Color", [
         { text: "White ♙", class: "btn-new", action: `color-white-${difficulty}` },
@@ -93,6 +84,14 @@ function showColorMenu(user, difficulty) {
         { text: "Random 🎲", class: "btn-new", action: `color-random-${difficulty}` },
         { text: "Back", class: "btn-exit", action: `back-difficulty` }
     ]);
+}
+
+async function startGame(user, difficulty, color) {
+    localStorage.setItem("difficulty", difficulty);
+    localStorage.setItem("color", color);
+
+    localStorage.removeItem("game_id");
+    window.location.href = `/chess.html`;
 }
 
 async function showLoadGameMenu() {
@@ -120,15 +119,10 @@ async function showLoadGameMenu() {
     ]);
 }
 
-async function navigateToGame(gameIdToLoad) {
-    localStorage.setItem("game_id", gameIdToLoad);
-
-    window.location.assign("/chess.html");
-}
-
 function handleAction(action) {
     switch (action) {
         case "new":
+            localStorage.removeItem("game_id");
             showGameModeMenu(currentUser);
             break;
         case "vs-bot":
@@ -158,16 +152,17 @@ function handleAction(action) {
         case "load-game":
             showLoadGameMenu();
             break;
-
         default:
             if (action.startsWith("color-")) {
                 const [, color, difficulty] = action.split("-");
+                
                 startGame(currentUser, difficulty, color);
                 break;
             } else if (action.startsWith("load-")) {
                 const gameIdToLoad = action.split("-")[1];
 
-                navigateToGame(gameIdToLoad);
+                localStorage.setItem("game_id", gameIdToLoad);
+                window.location.href = "/chess.html";
             }
 
             tg.sendData(JSON.stringify({ action }));
@@ -185,6 +180,8 @@ async function registerUser(user) {
         console.error("Registration failed:", err);
     }
 }
+
+let currentUser = null;
 
 async function init() {
     const app = document.getElementById("app");

@@ -21,6 +21,8 @@ function playMoveSound() {
 }
 
 async function startNewGame() {
+    localStorage.removeItem("game_id"); // ensure new game
+
     const resp = await fetch("/start_game/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,7 +41,7 @@ async function startNewGame() {
     }
 
     gameId = String(data.game_id);
-    localStorage.removeItem("game_id");
+    localStorage.setItem("game_id", gameId);
 
     setupBoard(data);
 }
@@ -58,14 +60,14 @@ async function loadGameById(id) {
     }
 
     gameId = String(data.game_id);
-    localStorage.setItem("game_id", gameId); // optional, for reference
+    localStorage.setItem("game_id", gameId);
 
-    // override difficulty/color if you want to preserve UI
     currentDifficulty = data.difficulty;
     playerColor = data.player_color;
 
     setupBoard(data);
 }
+
 function setupBoard(data) {
     game.load(data.fen || game.fen());
 
@@ -86,7 +88,6 @@ function setupBoard(data) {
         }, 600);
     }
 }
-
 
 function removeHighlights() {
     $('#chessboard .square-55d63').removeClass('highlight-square highlight-move highlight-capture selected-square king-in-check');
@@ -212,7 +213,6 @@ $(document).ready(function () {
         const square = $(this).attr('data-square');
         handleSquareClick(square);
     });
-
 
     if (gameId) {
         loadGameById(gameId);
