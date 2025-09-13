@@ -1,14 +1,17 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-function playClickSound() {
-    const audio = new Audio("/assets/sounds/click.mp3");
-    audio.currentTime = 0;
-    audio.play().catch(err => {
-        console.warn("Sound play blocked:", err);
-    });
-}
+const clickSound = new Audio("/assets/sounds/click.mp3");
+clickSound.preload = "auto";
 
+function playClickSound() {
+    try {
+        clickSound.currentTime = 0;
+        clickSound.play();
+    } catch (err) {
+        console.warn("Sound play blocked:", err);
+    }
+}
 function showOverlayAnimation(callback) {
     const overlay = document.createElement("div");
     overlay.className = "overlay";
@@ -154,7 +157,7 @@ async function showLoadGameMenu() {
             </div>
             <ul class="game-details">
                 <li><span class="label">Difficulty:</span> ${game.difficulty}</li>
-                <li><span class="label">Last Played:</span> ${formatLastPlayed(game.last_played)}</li>
+                <li><span class="label">Last Played:</span> ${formatLastPlayed(game.last_played)} (UTC)</li>
             </ul>
         `;
 
