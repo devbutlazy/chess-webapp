@@ -53,7 +53,7 @@ function renderMenu(title, buttons) {
 function showMainMenu(user) {
     renderMenu(`♟ ${user.first_name || user.username || "Player"}`, [
         { text: "New Game", class: "btn-new", action: "new" },
-        { text: "Load Game", class: "btn-new", action: "load-game" },
+        { text: "Load Game", class: "btn-load", action: "load-game" },
         { text: "Leaderboard", class: "btn-leaderboard", action: "leaderboard" },
         { text: "Settings", class: "btn-settings", action: "settings" },
     ]);
@@ -94,6 +94,36 @@ async function startGame(user, difficulty, color) {
     window.location.href = `/chess.html`;
 }
 
+function formatLastPlayed(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+
+    const optionsTime = { hour: "2-digit", minute: "2-digit" };
+    const optionsSameYear = { month: "short", day: "numeric", ...optionsTime };
+    const optionsDifferentYear = { year: "numeric", month: "short", day: "numeric" };
+
+    function getWeekNumber(d) {
+        const tempDate = new Date(d.getTime());
+        tempDate.setHours(0, 0, 0, 0);
+        tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7));
+        const yearStart = new Date(tempDate.getFullYear(), 0, 1);
+        const weekNo = Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
+        return weekNo;
+    }
+
+    const isSameYear = date.getFullYear() === now.getFullYear();
+    const isSameWeek = isSameYear && getWeekNumber(date) === getWeekNumber(now);
+
+    if (isSameWeek) {
+        return date.toLocaleString("en-US", { weekday: "long", ...optionsTime });
+    } else if (isSameYear) {
+        return date.toLocaleString("en-US", optionsSameYear);
+    } else {
+        return date.toLocaleString("en-US", optionsDifferentYear);
+    }
+}
+
+
 async function showLoadGameMenu() {
     const resp = await fetch(`/get_active_games/?user_id=${currentUser.id}`, {
         method: "GET",
@@ -101,23 +131,54 @@ async function showLoadGameMenu() {
     });
     const data = await resp.json();
 
+    const app = document.getElementById("app");
+    app.innerHTML = `<div class="saved-games-container"></div>`;
+
+    const container = app.querySelector(".saved-games-container");
+
     if (!data || data.length === 0) {
-        renderMenu("Load Game", [
-            { text: "No saved games found", class: "btn-disabled", action: "", disabled: true },
-            { text: "Back", class: "btn-exit", action: "back-main" }
-        ]);
-        return;
+        const noGameCard = document.createElement("div");
+        noGameCard.className = "saved-game-card no-game";
+        noGameCard.innerHTML = `<span>No saved games found</span>`;
+        container.appendChild(noGameCard);
+    } else {
+        data.forEach(game => {
+            const card = document.createElement("div");
+            card.className = "saved-game-card";
+            card.dataset.action = `load-${game.game_id}`;
+
+            card.innerHTML = `
+            <div class="game-header">
+                <span class="game-id">Game #${game.game_id}</span>
+                <span class="game-color ${game.player_color.toLowerCase()}">${game.player_color}</span>
+            </div>
+            <ul class="game-details">
+                <li><span class="label">Difficulty:</span> ${game.difficulty}</li>
+                <li><span class="label">Last Played:</span> ${formatLastPlayed(game.last_played)}</li>
+            </ul>
+        `;
+
+            card.addEventListener("click", () => {
+                playClickSound();
+                const gameIdToLoad = card.dataset.action.split("-")[1];
+                localStorage.setItem("game_id", gameIdToLoad);
+                window.location.href = "/chess.html";
+            });
+
+            container.appendChild(card);
+        });
     }
 
-    renderMenu("Load Game", [
-        ...data.map(game => ({
-            text: `Game #${game.game_id}; difficulty: ${game.difficulty}; color: ${game.player_color}; last played: ${game.last_played}`,
-            class: "btn-load",
-            action: `load-${game.game_id}`
-        })),
-        { text: "Back", class: "btn-exit", action: "back-main" }
-    ]);
+    const backBtn = document.createElement("button");
+    backBtn.className = "btn btn-exit";
+    backBtn.textContent = "Back";
+    backBtn.addEventListener("click", () => {
+        playClickSound();
+        showMainMenu(currentUser);
+    });
+    app.appendChild(backBtn);
 }
+
 
 function handleAction(action) {
     switch (action) {
@@ -155,7 +216,7 @@ function handleAction(action) {
         default:
             if (action.startsWith("color-")) {
                 const [, color, difficulty] = action.split("-");
-                
+
                 startGame(currentUser, difficulty, color);
                 break;
             } else if (action.startsWith("load-")) {

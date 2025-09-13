@@ -52,6 +52,11 @@ h1 {
     color: #fff;
 }
 
+.btn-load {
+    background-color: #560591;
+    color: #fff;
+}
+
 .btn-settings {
     background: linear-gradient(135deg, #facc15, #d97706);
     color: #fff;
@@ -120,4 +125,115 @@ button:disabled {
     cursor: not-allowed;
     opacity: 0.6;
     transform: none !important;
+}
+
+.saved-games-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    max-height: calc(120px * 3 + 16px * 2);
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.saved-games-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.saved-games-container::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 3px;
+}
+
+.saved-games-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.saved-game-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    padding: 18px 22px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: border 0.2s;
+    color: #fff;
+    flex-shrink: 0;
+    height: 120px;
+    overflow: visible;
+    position: relative;
+    border: 1px solid transparent;
+}
+
+.saved-game-card:hover {
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+
+.saved-game-card.no-game {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ccc;
+    font-weight: 600;
+    font-size: 1rem;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    cursor: default;
+}
+
+
+.game-id {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    align-self: flex-end;
+    letter-spacing: 0.5px;
+
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.game-color.white {
+    color: #222;
+    background: #F9F6EE;
+    border: 1px solid #ccc;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.game-color.black {
+    color: #fff;
+    background: #1B1212;
+    border: 1px solid #222;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.game-details {
+    list-style: disc;
+    padding-left: 20px;
+    font-size: 0.95rem;
+    color: #ddd;
+}
+
+.game-details li {
+    margin-bottom: 4px;
+}
+
+.game-details .label {
+    font-weight: 700;
+    color: #ddd;
 }

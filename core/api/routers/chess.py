@@ -101,7 +101,6 @@ async def make_move(data: MoveForm) -> dict:
     if board.is_game_over():
         async with ChessGameRepository() as repository:
             await repository.deactivate_game(game.game_id)
-
         return {
             "success": False,
             "message": "Game already over",
@@ -112,14 +111,12 @@ async def make_move(data: MoveForm) -> dict:
     move = _parse_move(data.move, board)
     if move not in board.legal_moves:
         raise HTTPException(status_code=400, detail="Illegal move")
-
     board.push(move)
 
     if board.is_game_over():
         async with ChessGameRepository() as repository:
             await repository.update_fen(game.game_id, board.fen())
             await repository.deactivate_game(game.game_id)
-
         return {
             "success": True,
             "fen": board.fen(),
@@ -138,9 +135,21 @@ async def make_move(data: MoveForm) -> dict:
         else chess.engine.Limit(time=preset.get("time"))
     )
     result = await engine.play(board, limit)
-
     bot_move = result.move
     board.push(bot_move)
+
+    if board.is_game_over():
+        async with ChessGameRepository() as repository:
+            await repository.update_fen(game.game_id, board.fen())
+            await repository.deactivate_game(game.game_id)
+        return {
+            "success": True,
+            "fen": board.fen(),
+            "bot_move": bot_move.uci(),
+            "game_over": True,
+            "result": board.result(),
+            "reason": board.outcome().termination.name if board.outcome() else None,
+        }
 
     async with ChessGameRepository() as repository:
         await repository.update_fen(game.game_id, board.fen())
@@ -149,9 +158,9 @@ async def make_move(data: MoveForm) -> dict:
         "success": True,
         "fen": board.fen(),
         "bot_move": bot_move.uci(),
-        "game_over": board.is_game_over(),
-        "result": board.result() if board.is_game_over() else None,
-        "reason": board.outcome().termination.name if board.outcome() else None,
+        "game_over": False,
+        "result": None,
+        "reason": None,
     }
 
 
