@@ -1,5 +1,5 @@
 const userId = window.localStorage.getItem("user_id");
-window.localStorage.setItem("user_id", userId);
+let gameId = window.localStorage.getItem("game_id"); 
 
 let currentDifficulty = window.localStorage.getItem("difficulty") || "medium";
 let playerColor = window.localStorage.getItem("color") || "white";
@@ -12,15 +12,15 @@ if (playerColor === "random") {
 let game = new Chess();
 let board = null;
 let selectedSquare = null;
-let gameId = null;
 
 const moveSound = new Audio("/assets/sounds/move-self.mp3");
+
 function playMoveSound() {
     moveSound.currentTime = 0;
-    moveSound.play().catch(() => {});
+    moveSound.play().catch(() => { });
 }
 
-async function startGame() {
+async function startNewGame() {
     const resp = await fetch("/start_game/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,8 +39,35 @@ async function startGame() {
     }
 
     gameId = String(data.game_id);
+    localStorage.removeItem("game_id");
 
-    game.reset();
+    setupBoard(data);
+}
+
+async function loadGameById(id) {
+    const resp = await fetch("/load_game/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ game_id: id })
+    });
+
+    const data = await resp.json();
+    if (!data.success) {
+        alert("Could not load game: " + (data.detail || data.message));
+        return;
+    }
+
+    gameId = String(data.game_id);
+    localStorage.setItem("game_id", gameId); // optional, for reference
+
+    // override difficulty/color if you want to preserve UI
+    currentDifficulty = data.difficulty;
+    playerColor = data.player_color;
+
+    setupBoard(data);
+}
+function setupBoard(data) {
+    game.load(data.fen || game.fen());
 
     board = Chessboard('chessboard', {
         position: game.fen(),
@@ -60,25 +87,42 @@ async function startGame() {
     }
 }
 
+
 function removeHighlights() {
-    $('#chessboard .square-55d63').removeClass('highlight-square highlight-move highlight-capture selected-square');
+    $('#chessboard .square-55d63').removeClass('highlight-square highlight-move highlight-capture selected-square king-in-check');
 }
 
 function highlightCheck() {
     $('#chessboard .square-55d63').removeClass('king-in-check');
-    if (game.in_check()) {
-        const turn = game.turn();
-        const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        for (let rank = 1; rank <= 8; rank++) {
-            for (let file of files) {
-                const square = file + rank;
-                const piece = game.get(square);
-                if (piece && piece.type === 'k' && piece.color === turn) {
-                    $('#chessboard .square-' + square).addClass('king-in-check');
-                }
+    if (!game.in_check()) return;
+
+    const turn = game.turn();
+    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    for (let rank = 1; rank <= 8; rank++) {
+        for (let file of files) {
+            const square = file + rank;
+            const piece = game.get(square);
+            if (piece && piece.type === 'k' && piece.color === turn) {
+                $('#chessboard .square-' + square).addClass('king-in-check');
             }
         }
     }
+}
+
+function highlightMoves(square) {
+    const moves = game.moves({ square: square, verbose: true });
+    if (!moves.length) return;
+
+    $('#chessboard .square-' + square).addClass('highlight-square');
+
+    moves.forEach(m => {
+        const target = $('#chessboard .square-' + m.to);
+        if (m.flags.includes('c')) {
+            target.addClass('highlight-capture');
+        } else {
+            target.addClass('highlight-move');
+        }
+    });
 }
 
 async function handleSquareClick(square) {
@@ -103,7 +147,7 @@ async function handleSquareClick(square) {
     }
 
     const move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
-    if (move === null) {
+    if (!move) {
         const piece = game.get(square);
         if (piece && piece.color === game.turn()) {
             selectedSquare = square;
@@ -125,12 +169,8 @@ async function handleSquareClick(square) {
         const resp = await fetch("/make_move/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                game_id: gameId,
-                move: move.san
-            }),
+            body: JSON.stringify({ game_id: gameId, move: move.san }),
         });
-
         const data = await resp.json();
 
         if (!data.success) {
@@ -147,28 +187,16 @@ async function handleSquareClick(square) {
             highlightCheck();
             playMoveSound();
 
-            if (data.bot_move) {
-                console.log("Bot played:", data.bot_move);
-            }
+            if (data.bot_move) console.log("Bot played:", data.bot_move);
 
             if (data.game_over) {
                 let resultMsg = "";
+                if (data.result === "1-0") resultMsg = (playerColor === "white") ? "You win! 🎉" : "You lose. ❌";
+                else if (data.result === "0-1") resultMsg = (playerColor === "black") ? "You win! 🎉" : "You lose. ❌";
+                else if (data.result === "1/2-1/2") resultMsg = "Draw 🤝";
 
-                if (data.result === "1-0") {
-                    resultMsg = (playerColor === "white") ? "You win! 🎉" : "You lose. ❌";
-                } else if (data.result === "0-1") {
-                    resultMsg = (playerColor === "black") ? "You win! 🎉" : "You lose. ❌";
-                } else if (data.result === "1/2-1/2") {
-                    resultMsg = "Draw 🤝";
-                }
-
-                if (data.reason) {
-                    resultMsg += " (" + data.reason.replaceAll("_", " ").toLowerCase() + ")";
-                }
-
-                setTimeout(() => {
-                    alert(resultMsg);
-                }, 600); 
+                if (data.reason) resultMsg += " (" + data.reason.replaceAll("_", " ").toLowerCase() + ")";
+                setTimeout(() => alert(resultMsg), 600);
             }
         }, 500);
     } catch (err) {
@@ -179,27 +207,16 @@ async function handleSquareClick(square) {
     }
 }
 
-function highlightMoves(square) {
-    const moves = game.moves({ square: square, verbose: true });
-    if (moves.length === 0) return;
-
-    $('#chessboard .square-' + square).addClass('highlight-square');
-
-    moves.forEach(function (m) {
-        var target = $('#chessboard .square-' + m.to);
-        if (m.flags.includes('c')) {
-            target.addClass('highlight-capture');
-        } else {
-            target.addClass('highlight-move');
-        }
-    });
-}
-
-$(document).ready(async function () {
+$(document).ready(function () {
     $('#chessboard').on('click', '.square-55d63', function () {
         const square = $(this).attr('data-square');
         handleSquareClick(square);
     });
 
-    await startGame();
+
+    if (gameId) {
+        loadGameById(gameId);
+    } else {
+        startNewGame();
+    }
 });

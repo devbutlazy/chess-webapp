@@ -59,13 +59,6 @@ async def start_game(data: ChessGameForm) -> dict:
                 difficulty=data.difficulty,
             )
 
-        # games[data.user_id] = {
-        #     "board": board,
-        #     "engine": engine,
-        #     "preset": preset,
-        #     "player_color": player_color,
-        # }
-
         bot_move = None
 
         if player_color == "black":
@@ -173,6 +166,7 @@ async def get_active_games(user_id: int) -> list:
             "fen": game.fen,
             "player_color": game.player_color,
             "difficulty": game.difficulty,
+            "last_played": game.updated_at
         }
         for game in games
     ]

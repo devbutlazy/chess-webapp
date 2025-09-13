@@ -53,6 +53,7 @@ function renderMenu(title, buttons) {
 function showMainMenu(user) {
     renderMenu(`♟ ${user.first_name || user.username || "Player"}`, [
         { text: "New Game", class: "btn-new", action: "new" },
+        { text: "Load Game", class: "btn-new", action: "load-game" }, // ✅ NEW
         { text: "Leaderboard", class: "btn-leaderboard", action: "leaderboard" },
         { text: "Settings", class: "btn-settings", action: "settings" },
     ]);
@@ -94,6 +95,37 @@ function showColorMenu(user, difficulty) {
     ]);
 }
 
+async function showLoadGameMenu() {
+    const resp = await fetch(`/get_active_games/?user_id=${currentUser.id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+    });
+    const data = await resp.json();
+
+    if (!data || data.length === 0) {
+        renderMenu("Load Game", [
+            { text: "No saved games found", class: "btn-disabled", action: "", disabled: true },
+            { text: "Back", class: "btn-exit", action: "back-main" }
+        ]);
+        return;
+    }
+
+    renderMenu("Load Game", [
+        ...data.map(game => ({
+            text: `Game #${game.game_id}; difficulty: ${game.difficulty}; color: ${game.player_color}; last played: ${game.last_played}`,
+            class: "btn-load",
+            action: `load-${game.game_id}`
+        })),
+        { text: "Back", class: "btn-exit", action: "back-main" }
+    ]);
+}
+
+async function navigateToGame(gameIdToLoad) {
+    localStorage.setItem("game_id", gameIdToLoad);
+
+    window.location.assign("/chess.html");
+}
+
 function handleAction(action) {
     switch (action) {
         case "new":
@@ -123,13 +155,21 @@ function handleAction(action) {
         case "difficulty-impossible":
             showColorMenu(currentUser, "impossible");
             break;
+        case "load-game":
+            showLoadGameMenu();
+            break;
 
         default:
             if (action.startsWith("color-")) {
                 const [, color, difficulty] = action.split("-");
                 startGame(currentUser, difficulty, color);
                 break;
+            } else if (action.startsWith("load-")) {
+                const gameIdToLoad = action.split("-")[1];
+
+                navigateToGame(gameIdToLoad);
             }
+
             tg.sendData(JSON.stringify({ action }));
     }
 }
@@ -150,14 +190,13 @@ async function init() {
     const app = document.getElementById("app");
     const user = tg.initDataUnsafe.user;
 
-    localStorage.setItem("user_id", user.id);
-
     if (!user) {
         app.innerHTML = "<h1>❌ Could not get user info</h1>";
         return;
     }
 
     currentUser = user;
+    localStorage.setItem("user_id", user.id);
 
     const resp = await fetch("/check_user/", {
         method: "POST",
