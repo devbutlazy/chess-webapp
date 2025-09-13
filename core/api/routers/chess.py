@@ -50,6 +50,7 @@ async def start_game(data: ChessGameForm) -> dict:
             data.color if data.color != "random" else random.choice(["white", "black"])
         )
 
+        print(f"{data.user_id=}")
         async with ChessGameRepository() as repository:
             game = await repository.create_game(
                 user_id=data.user_id,
@@ -79,7 +80,7 @@ async def start_game(data: ChessGameForm) -> dict:
             board.push(bot_move)
 
             async with ChessGameRepository() as repository:
-                await repository.update_fen(game.id, board.fen())
+                await repository.update_fen(game.game_id, board.fen())
 
         return {
             "success": True,
@@ -88,7 +89,7 @@ async def start_game(data: ChessGameForm) -> dict:
             "turn": "white" if board.turn == chess.WHITE else "black",
             "player_color": player_color,
             "bot_move": bot_move.uci() if bot_move else None,
-            "game_id": game.id,
+            "game_id": game.game_id,
         }
 
     raise HTTPException(400, detail="User vs User not implemented yet")
@@ -106,7 +107,7 @@ async def make_move(data: MoveForm) -> dict:
 
     if board.is_game_over():
         async with ChessGameRepository() as repository:
-            await repository.deactivate_game(game.id)
+            await repository.deactivate_game(game.game_id)
 
         return {
             "success": False,
@@ -123,8 +124,8 @@ async def make_move(data: MoveForm) -> dict:
 
     if board.is_game_over():
         async with ChessGameRepository() as repository:
-            await repository.update_fen(game.id, board.fen())
-            await repository.deactivate_game(game.id)
+            await repository.update_fen(game.game_id, board.fen())
+            await repository.deactivate_game(game.game_id)
 
         return {
             "success": True,
@@ -149,7 +150,7 @@ async def make_move(data: MoveForm) -> dict:
     board.push(bot_move)
 
     async with ChessGameRepository() as repository:
-        await repository.update_fen(game.id, board.fen())
+        await repository.update_fen(game.game_id, board.fen())
 
     return {
         "success": True,
@@ -168,7 +169,7 @@ async def get_active_games(user_id: int) -> list:
 
     return [
         {
-            "game_id": game.id,
+            "game_id": game.game_id,
             "fen": game.fen,
             "player_color": game.player_color,
             "difficulty": game.difficulty,
@@ -187,7 +188,7 @@ async def load_game(data: LoadGameForm) -> dict:
 
     return {
         "success": True,
-        "game_id": game.id,
+        "game_id": game.game_id,
         "fen": game.fen,
         "player_color": game.player_color,
         "difficulty": game.difficulty,

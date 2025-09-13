@@ -1,9 +1,11 @@
+import random
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from core.database import engine
 from core.database.repositories.base import BaseRepository
-from core.database.models.user import ChessGameORM
+from core.database.models.user import ChessGameORM, UserORM
 
 from typing import Self, List
 
@@ -19,12 +21,34 @@ class ChessGameRepository(BaseRepository):
     async def __aexit__(self, exc_type, exc_value, exc_tb) -> None:  # noqa
         return await self.session().close()
 
+    async def _generate_unique_game_id(self, session, user_id: int) -> str:
+        existing_ids = set(
+            (
+                row[0]
+                for row in (
+                    await session.execute(
+                        select(ChessGameORM.game_id).where(
+                            ChessGameORM.user_id == user_id
+                        )
+                    )
+                ).all()
+            )
+        )
+
+        while True:
+            candidate = f"{random.randint(0, 999999):06d}"
+            if candidate not in existing_ids:
+                return candidate
+
     async def create_game(
         self, user_id: int, fen: str, player_color: str, difficulty: str
     ) -> ChessGameORM:
         async with self.session() as session:
+            game_id = await self._generate_unique_game_id(session, user_id)
+
             new_game = ChessGameORM(
                 user_id=user_id,
+                game_id=game_id,
                 fen=fen,
                 player_color=player_color,
                 difficulty=difficulty,
@@ -49,7 +73,7 @@ class ChessGameRepository(BaseRepository):
     async def get_game(self, game_id: int) -> ChessGameORM | None:
         async with self.session() as session:
             result = await session.execute(
-                select(ChessGameORM).where(ChessGameORM.id == game_id)
+                select(ChessGameORM).where(ChessGameORM.game_id == game_id)
             )
             return result.scalar_one_or_none()
 
@@ -57,7 +81,7 @@ class ChessGameRepository(BaseRepository):
         async with self.session() as session:
             await session.execute(
                 update(ChessGameORM)
-                .where(ChessGameORM.id == game_id)
+                .where(ChessGameORM.game_id == game_id)
                 .values(fen=new_fen)
             )
             await session.commit()
@@ -66,7 +90,7 @@ class ChessGameRepository(BaseRepository):
         async with self.session() as session:
             await session.execute(
                 update(ChessGameORM)
-                .where(ChessGameORM.id == game_id)
+                .where(ChessGameORM.game_id == game_id)
                 .values(is_active=False)
             )
             await session.commit()

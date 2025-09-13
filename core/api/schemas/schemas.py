@@ -11,9 +11,9 @@ class ChessGameForm(BaseModel):
 
 
 class MoveForm(BaseModel):
-    game_id: int
+    game_id: str
     move: str
 
 
 class LoadGameForm(BaseModel):
-    game_id: int
+    game_id: str

@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, String, Boolean, DateTime, ForeignKey, func
+from sqlalchemy import (
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    func,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database.models.base import Base
@@ -38,9 +46,11 @@ class ChessGameORM(Base):
     __tablename__ = "chess_games"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
+    game_id: Mapped[str] = mapped_column(String(6), nullable=False)
 
     fen: Mapped[str] = mapped_column(String, nullable=False)
     player_color: Mapped[str] = mapped_column(String, nullable=False)
@@ -59,4 +69,6 @@ class ChessGameORM(Base):
 
     user = relationship("UserORM", back_populates="games")
 
-    repr_cols_num: int = 9
+    __table_args__ = (UniqueConstraint("user_id", "game_id", name="uq_user_gameid"),)
+
+    repr_cols_num: int = 10

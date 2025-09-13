@@ -150,6 +150,8 @@ async function init() {
     const app = document.getElementById("app");
     const user = tg.initDataUnsafe.user;
 
+    localStorage.setItem("user_id", user.id);
+
     if (!user) {
         app.innerHTML = "<h1>❌ Could not get user info</h1>";
         return;

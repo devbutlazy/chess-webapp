@@ -1,4 +1,4 @@
-const userId = window.localStorage.getItem("user_id") || Math.floor(Math.random() * 1000000);
+const userId = window.localStorage.getItem("user_id");
 window.localStorage.setItem("user_id", userId);
 
 let currentDifficulty = window.localStorage.getItem("difficulty") || "medium";
@@ -38,7 +38,7 @@ async function startGame() {
         return;
     }
 
-    gameId = data.game_id;
+    gameId = String(data.game_id);
 
     game.reset();
 
