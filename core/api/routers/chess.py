@@ -166,7 +166,7 @@ async def get_active_games(user_id: int) -> list:
             "fen": game.fen,
             "player_color": game.player_color,
             "difficulty": game.difficulty,
-            "last_played": game.updated_at
+            "last_played": game.updated_at,
         }
         for game in games
     ]
