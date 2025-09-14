@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: chess-webapp
+    env_file:
+      - ../core/config/.env
+    ports:
+      - "3434:3434"  
+    environment:
+      - APP_PORT=3434
+    volumes:
+      - ..:/app      

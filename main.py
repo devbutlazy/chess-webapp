@@ -1,3 +1,4 @@
+import os
 import asyncio
 
 from fastapi import FastAPI
@@ -45,7 +46,12 @@ async def main() -> None:
     app.mount("/assets", StaticFiles(directory="frontend/assets"), name="assets")
     # app.mount("/", StaticFiles(directory="frontend/html", html=True), name="html")
 
-    config = Config(app=app, host="0.0.0.0", port=8080, loop="asyncio")
+    config = Config(
+        app=app,
+        host="0.0.0.0",
+        port=int(os.environ.get("APP_PORT", 8080)),
+        loop="asyncio",
+    )
     server = Server(config=config)
 
     init_fastapi_routers(app)

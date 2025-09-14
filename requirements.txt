@@ -3,6 +3,7 @@ sqlite3
 
 fastapi
 sqlalchemy
+stockfish
 python-chess
 
 pydantic

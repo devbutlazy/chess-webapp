@@ -53,7 +53,8 @@ class GameEngine:
         cls._engines.pop(game_id, None)
         cls._boards.pop(game_id, None)
 
-    def parse_move(self, move_str: str, board: chess.Board) -> chess.Move:
+    @staticmethod
+    def parse_move(move_str: str, board: chess.Board) -> chess.Move:
         parsers = (board.parse_san, board.parse_uci)
         for parser in parsers:
             try:
