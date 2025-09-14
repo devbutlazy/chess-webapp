@@ -21,8 +21,8 @@ function playMoveSound() {
 }
 
 async function startNewGame() {
-    localStorage.removeItem("game_id"); // ensure new game
-
+    localStorage.removeItem("game_id"); 
+    
     const resp = await fetch("/start_game/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
