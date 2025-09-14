@@ -18,5 +18,6 @@ class MoveForm(BaseModel):
 class LoadGameForm(BaseModel):
     game_id: str
 
+
 class CheckUserForm(BaseModel):
     user_id: int

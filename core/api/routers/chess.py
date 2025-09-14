@@ -14,7 +14,7 @@ router = APIRouter()
 async def start_game(data: ChessGameForm) -> dict:
     if data.mode != "bot":
         raise HTTPException(400, detail="User vs User not implemented yet")
-    
+
     if not data.difficulty:
         raise HTTPException(400, detail="Difficulty required for bot mode")
 
@@ -69,7 +69,7 @@ async def make_move(data: MoveForm) -> dict:
         async with ChessGameRepository() as repo:
             await repo.update_fen(game.game_id, board.fen())
             await repo.deactivate_game(game.game_id)
-            
+
         await GameEngine.cleanup_game(game.game_id)
         outcome = board.outcome()
 
@@ -136,7 +136,7 @@ async def load_game(data: LoadGameForm) -> dict:
 
     if not game or not game.is_active:
         raise HTTPException(404, detail="Game not found or is not active.")
-    
+
     return {
         "success": True,
         "game_id": game.game_id,
