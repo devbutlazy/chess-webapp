@@ -1,6 +1,7 @@
 aiosqlite
 
 fastapi
+uvicorn
 sqlalchemy
 stockfish
 python-chess
