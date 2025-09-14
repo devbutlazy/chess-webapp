@@ -1,5 +1,4 @@
 aiosqlite
-sqlite3
 
 fastapi
 sqlalchemy
