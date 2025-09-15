@@ -12,6 +12,15 @@
 <body>
     <div id="chessboard"></div>
 
+    <div id="promotionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div class="bg-white p-4 rounded-lg shadow-md flex gap-4">
+            <img src="/assets/chesspieces/wQ.png" class="promotion-piece" data-piece="q">
+            <img src="/assets/chesspieces/wR.png" class="promotion-piece" data-piece="r">
+            <img src="/assets/chesspieces/wB.png" class="promotion-piece" data-piece="b">
+            <img src="/assets/chesspieces/wN.png" class="promotion-piece" data-piece="n">
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>

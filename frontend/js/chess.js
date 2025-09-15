@@ -1,5 +1,5 @@
 const userId = window.localStorage.getItem("user_id");
-let gameId = window.localStorage.getItem("game_id"); 
+let gameId = window.localStorage.getItem("game_id");
 
 let currentDifficulty = window.localStorage.getItem("difficulty") || "medium";
 let playerColor = window.localStorage.getItem("color") || "white";
@@ -21,8 +21,8 @@ function playMoveSound() {
 }
 
 async function startNewGame() {
-    localStorage.removeItem("game_id"); 
-    
+    localStorage.removeItem("game_id");
+
     const resp = await fetch("/start_game/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -147,16 +147,39 @@ async function handleSquareClick(square) {
         return;
     }
 
-    const move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
+    const piece = game.get(selectedSquare);
+
+    if (piece.type === 'p' &&
+        ((piece.color === 'w' && square.endsWith('8')) || (piece.color === 'b' && square.endsWith('1')))) {
+        showPromotionModal(selectedSquare, square, piece.color);
+        return;
+    }
+
+    makeMove(selectedSquare, square, 'q');
+}
+
+function showPromotionModal(from, to, color) {
+    const modal = $('#promotionModal');
+    modal.removeClass('hidden');
+
+    modal.find('.promotion-piece').each(function () {
+        const pieceType = $(this).data('piece');
+        $(this).attr('src', `/assets/chesspieces/${color}${pieceType.toUpperCase()}.png`);
+    });
+
+    $('.promotion-piece').off('click').on('click', function () {
+        const selectedPromotion = $(this).data('piece');
+        modal.addClass('hidden');
+        makeMove(from, to, selectedPromotion);
+    });
+}
+
+function makeMove(from, to, promotion) {
+    const move = game.move({ from, to, promotion });
     if (!move) {
-        const piece = game.get(square);
-        if (piece && piece.color === game.turn()) {
-            selectedSquare = square;
-            removeHighlights();
-            $('#chessboard .square-' + square).addClass('selected-square');
-            highlightMoves(square);
-            highlightCheck();
-        }
+        selectedSquare = null;
+        removeHighlights();
+        highlightCheck();
         return;
     }
 
@@ -166,6 +189,10 @@ async function handleSquareClick(square) {
     highlightCheck();
     playMoveSound();
 
+    sendMoveToServer(move);
+}
+
+async function sendMoveToServer(move) {
     try {
         const resp = await fetch("/make_move/", {
             method: "POST",
