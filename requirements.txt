@@ -1,4 +1,5 @@
-aiosqlite
+asyncpg
+psycopg2-binary
 
 fastapi
 uvicorn

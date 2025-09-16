@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import (
     Integer,
+    BigInteger,
     String,
     Boolean,
     DateTime,
@@ -23,7 +24,7 @@ class UserORM(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    user_id: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, unique=True)
     registration_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -48,7 +49,7 @@ class ChessGameORM(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        BigInteger, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
     )
     game_id: Mapped[str] = mapped_column(String(6), nullable=False)
 
