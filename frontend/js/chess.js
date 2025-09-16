@@ -1,8 +1,7 @@
-const userId = window.localStorage.getItem("user_id");
-let gameId = window.localStorage.getItem("game_id");
-
-let currentDifficulty = window.localStorage.getItem("difficulty") || "medium";
-let playerColor = window.localStorage.getItem("color") || "white";
+const userId = Number(localStorage.getItem("user_id"));
+let gameId = localStorage.getItem("game_id");
+let currentDifficulty = localStorage.getItem("difficulty") || "medium";
+let playerColor = localStorage.getItem("color") || "white";
 
 if (playerColor === "random") {
     playerColor = Math.random() > 0.5 ? "white" : "black";
@@ -14,35 +13,20 @@ let board = null;
 let selectedSquare = null;
 
 const moveSound = new Audio("/assets/sounds/move-self.mp3");
-
-function playMoveSound() {
-    moveSound.currentTime = 0;
-    moveSound.play().catch(() => { });
-}
+const playMoveSound = () => moveSound.play().catch(() => { moveSound.currentTime = 0; });
 
 async function startNewGame() {
     localStorage.removeItem("game_id");
-
     const resp = await fetch("/start_game/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            user_id: parseInt(userId),
-            mode: "bot",
-            difficulty: currentDifficulty,
-            color: playerColor
-        }),
+        body: JSON.stringify({ user_id: userId, mode: "bot", difficulty: currentDifficulty, color: playerColor })
     });
-
     const data = await resp.json();
-    if (!data.success) {
-        alert("Could not start game: " + (data.detail || data.message));
-        return;
-    }
+    if (!data.success) return alert("Could not start game: " + (data.detail || data.message));
 
     gameId = String(data.game_id);
     localStorage.setItem("game_id", gameId);
-
     setupBoard(data);
 }
 
@@ -52,89 +36,67 @@ async function loadGameById(id) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ game_id: id })
     });
-
     const data = await resp.json();
-    if (!data.success) {
-        alert("Could not load game: " + (data.detail || data.message));
-        return;
-    }
+    if (!data.success) return alert("Could not load game: " + (data.detail || data.message));
 
     gameId = String(data.game_id);
     localStorage.setItem("game_id", gameId);
-
     currentDifficulty = data.difficulty;
     playerColor = data.player_color;
-
     setupBoard(data);
 }
 
 function setupBoard(data) {
     game.load(data.fen || game.fen());
+    board = Chessboard("chessboard", { position: game.fen(), orientation: playerColor, draggable: false, pieceTheme: "/assets/chesspieces/{piece}.png" });
 
-    board = Chessboard('chessboard', {
-        position: game.fen(),
-        orientation: playerColor,
-        draggable: false,
-        pieceTheme: '/assets/chesspieces/{piece}.png'
-    });
-
-    if (data.bot_move) {
-        setTimeout(() => {
-            game.load(data.fen);
-            board.position(data.fen);
-            highlightCheck();
-            playMoveSound();
-            console.log("Bot played:", data.bot_move);
-        }, 600);
-    }
+    if (data.bot_move) setTimeout(() => {
+        game.load(data.fen);
+        board.position(data.fen);
+        highlightCheck();
+        playMoveSound();
+        console.log("Bot played:", data.bot_move);
+    }, 600);
 }
 
 function removeHighlights() {
-    $('#chessboard .square-55d63').removeClass('highlight-square highlight-move highlight-capture selected-square king-in-check');
+    document.querySelectorAll("#chessboard .square-55d63").forEach(sq => sq.classList.remove("highlight-square", "highlight-move", "highlight-capture", "selected-square", "king-in-check"));
 }
 
 function highlightCheck() {
-    $('#chessboard .square-55d63').removeClass('king-in-check');
+    removeHighlights();
     if (!game.in_check()) return;
 
     const turn = game.turn();
-    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
     for (let rank = 1; rank <= 8; rank++) {
         for (let file of files) {
             const square = file + rank;
             const piece = game.get(square);
-            if (piece && piece.type === 'k' && piece.color === turn) {
-                $('#chessboard .square-' + square).addClass('king-in-check');
-            }
+            if (piece?.type === "k" && piece.color === turn) document.querySelector(`#chessboard .square-${square}`)?.classList.add("king-in-check");
         }
     }
 }
 
 function highlightMoves(square) {
-    const moves = game.moves({ square: square, verbose: true });
+    const moves = game.moves({ square, verbose: true });
     if (!moves.length) return;
-
-    $('#chessboard .square-' + square).addClass('highlight-square');
+    document.querySelector(`#chessboard .square-${square}`)?.classList.add("highlight-square");
 
     moves.forEach(m => {
-        const target = $('#chessboard .square-' + m.to);
-        if (m.flags.includes('c')) {
-            target.addClass('highlight-capture');
-        } else {
-            target.addClass('highlight-move');
-        }
+        const target = document.querySelector(`#chessboard .square-${m.to}`);
+        if (!target) return;
+        target.classList.add(m.flags.includes("c") ? "highlight-capture" : "highlight-move");
     });
 }
 
 async function handleSquareClick(square) {
+    const piece = game.get(square);
     if (!selectedSquare) {
-        const piece = game.get(square);
-        if (!piece) return;
-        if ((game.turn() === 'w' && piece.color === 'b') || (game.turn() === 'b' && piece.color === 'w')) return;
-
+        if (!piece || (game.turn() !== piece.color)) return;
         selectedSquare = square;
         removeHighlights();
-        $('#chessboard .square-' + square).addClass('selected-square');
+        document.querySelector(`#chessboard .square-${square}`)?.classList.add("selected-square");
         highlightMoves(square);
         highlightCheck();
         return;
@@ -147,67 +109,45 @@ async function handleSquareClick(square) {
         return;
     }
 
-    const piece = game.get(selectedSquare);
-
-    if (piece.type === 'p' &&
-        ((piece.color === 'w' && square.endsWith('8')) || (piece.color === 'b' && square.endsWith('1')))) {
+    if (piece?.type === "p" && ((piece.color === "w" && square.endsWith("8")) || (piece.color === "b" && square.endsWith("1")))) {
         showPromotionModal(selectedSquare, square, piece.color);
         return;
     }
 
-    makeMove(selectedSquare, square, 'q');
+    makeMove(selectedSquare, square, "q");
 }
 
 function showPromotionModal(from, to, color) {
-    const modal = $('#promotionModal');
-    modal.removeClass('hidden');
+    const modal = document.getElementById("promotionModal");
+    modal.classList.remove("hidden");
 
-    modal.find('.promotion-piece').each(function () {
-        const pieceType = $(this).data('piece');
-        $(this).attr('src', `/assets/chesspieces/${color}${pieceType.toUpperCase()}.png`);
-    });
-
-    $('.promotion-piece').off('click').on('click', function () {
-        const selectedPromotion = $(this).data('piece');
-        modal.addClass('hidden');
-        makeMove(from, to, selectedPromotion);
+    modal.querySelectorAll(".promotion-piece").forEach(img => {
+        const type = img.dataset.piece;
+        img.src = `/assets/chesspieces/${color}${type.toUpperCase()}.png`;
+        img.onclick = () => {
+            modal.classList.add("hidden");
+            makeMove(from, to, type);
+        };
     });
 }
 
 function makeMove(from, to, promotion) {
     const move = game.move({ from, to, promotion });
-    if (!move) {
-        selectedSquare = null;
-        removeHighlights();
-        highlightCheck();
-        return;
-    }
+    if (!move) { selectedSquare = null; removeHighlights(); highlightCheck(); return; }
 
     board.position(game.fen());
     selectedSquare = null;
     removeHighlights();
     highlightCheck();
     playMoveSound();
-
     sendMoveToServer(move);
 }
 
 async function sendMoveToServer(move) {
     try {
-        const resp = await fetch("/make_move/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ game_id: gameId, move: move.san }),
-        });
+        const resp = await fetch("/make_move/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ game_id: gameId, move: move.san }) });
         const data = await resp.json();
-
-        if (!data.success) {
-            alert("Move rejected: " + (data.detail || data.message));
-            game.undo();
-            board.position(game.fen());
-            highlightCheck();
-            return;
-        }
+        if (!data.success) { game.undo(); board.position(game.fen()); highlightCheck(); return alert("Move rejected: " + (data.detail || data.message)); }
 
         setTimeout(() => {
             game.load(data.fen);
@@ -216,15 +156,12 @@ async function sendMoveToServer(move) {
             playMoveSound();
 
             if (data.bot_move) console.log("Bot played:", data.bot_move);
-
             if (data.game_over) {
-                let resultMsg = "";
-                if (data.result === "1-0") resultMsg = (playerColor === "white") ? "You win! 🎉" : "You lose. ❌";
-                else if (data.result === "0-1") resultMsg = (playerColor === "black") ? "You win! 🎉" : "You lose. ❌";
-                else if (data.result === "1/2-1/2") resultMsg = "Draw 🤝";
-
-                if (data.reason) resultMsg += " (" + data.reason.replaceAll("_", " ").toLowerCase() + ")";
-                setTimeout(() => alert(resultMsg), 600);
+                let msg = data.result === "1-0" ? (playerColor === "white" ? "You win! 🎉" : "You lose. ❌") :
+                    data.result === "0-1" ? (playerColor === "black" ? "You win! 🎉" : "You lose. ❌") :
+                        "Draw 🤝";
+                if (data.reason) msg += ` (${data.reason.replaceAll("_", " ").toLowerCase()})`;
+                setTimeout(() => alert(msg), 600);
             }
         }, 500);
     } catch (err) {
@@ -235,15 +172,12 @@ async function sendMoveToServer(move) {
     }
 }
 
-$(document).ready(function () {
-    $('#chessboard').on('click', '.square-55d63', function () {
-        const square = $(this).attr('data-square');
-        handleSquareClick(square);
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("chessboard").addEventListener("click", e => {
+        const square = e.target.dataset.square;
+        if (square) handleSquareClick(square);
     });
 
-    if (gameId) {
-        loadGameById(gameId);
-    } else {
-        startNewGame();
-    }
+    if (gameId) loadGameById(gameId);
+    else startNewGame();
 });
