@@ -52,12 +52,16 @@ const renderMenu = (title, buttons) => {
 };
 
 const menus = {
-    main: (user) => [`♟ ${user.first_name || user.username || "Player"}`, [
-        { text: "New Games", class: "btn-new", action: "new" },
-        { text: "Load Game", class: "btn-load", action: "load-game" },
-        { text: "Leaderboard", class: "btn-leaderboard", action: "leaderboard" },
-        { text: "Settings", class: "btn-settings", action: "settings" },
-    ]],
+    main: (user) => {
+        const name = user.first_name || user.username || "Player";
+        const displayName = name.length > 12 ? name.substring(0, 9) + "..." : name;
+        return [`♟ ${displayName}`, [
+            { text: "New Game", class: "btn-new", action: "new" },
+            { text: "Load Game", class: "btn-load", action: "load-game" },
+            { text: "Leaderboard", class: "btn-leaderboard", action: "leaderboard" },
+            { text: "Settings", class: "btn-settings", action: "settings" },
+        ]];
+    },
     mode: () => ["Choose Mode", [
         { text: "VS Bot", class: "btn-new", action: "vs-bot" },
         { text: "VS User (Coming Soon)", class: "btn-leaderboard", action: "vs-user", disabled: true },
