@@ -1,8 +1,8 @@
-const userId = window.localStorage.getItem("user_id");
-let gameId = window.localStorage.getItem("game_id");
+const userId = localStorage.getItem("user_id");
 
-let currentDifficulty = window.localStorage.getItem("difficulty") || "medium";
-let playerColor = window.localStorage.getItem("color") || "white";
+let gameId = localStorage.getItem("game_id");
+let currentDifficulty = localStorage.getItem("difficulty") || "medium";
+let playerColor = localStorage.getItem("color") || "white";
 
 if (playerColor === "random") {
     playerColor = Math.random() > 0.5 ? "white" : "black";
@@ -15,26 +15,30 @@ let selectedSquare = null;
 
 const moveSound = new Audio("/assets/sounds/move-self.mp3");
 
-function playMoveSound() {
+const playMoveSound = () => {
     moveSound.currentTime = 0;
     moveSound.play().catch(() => { });
-}
+};
 
-async function startNewGame() {
-    localStorage.removeItem("game_id");
-
-    const resp = await fetch("/start_game/", {
+const apiCall = async (endpoint, data) => {
+    const resp = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            user_id: parseInt(userId),
-            mode: "bot",
-            difficulty: currentDifficulty,
-            color: playerColor
-        }),
+        body: JSON.stringify(data)
+    });
+    return resp.json();
+};
+
+const startNewGame = async () => {
+    localStorage.removeItem("game_id");
+
+    const data = await apiCall("/start_game/", {
+        user_id: parseInt(userId),
+        mode: "bot",
+        difficulty: currentDifficulty,
+        color: playerColor
     });
 
-    const data = await resp.json();
     if (!data.success) {
         alert("Could not start game: " + (data.detail || data.message));
         return;
@@ -42,18 +46,12 @@ async function startNewGame() {
 
     gameId = String(data.game_id);
     localStorage.setItem("game_id", gameId);
-
     setupBoard(data);
-}
+};
 
-async function loadGameById(id) {
-    const resp = await fetch("/load_game/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ game_id: id })
-    });
+const loadGameById = async (id) => {
+    const data = await apiCall("/load_game/", { game_id: id });
 
-    const data = await resp.json();
     if (!data.success) {
         alert("Could not load game: " + (data.detail || data.message));
         return;
@@ -61,14 +59,12 @@ async function loadGameById(id) {
 
     gameId = String(data.game_id);
     localStorage.setItem("game_id", gameId);
-
     currentDifficulty = data.difficulty;
     playerColor = data.player_color;
-
     setupBoard(data);
-}
+};
 
-function setupBoard(data) {
+const setupBoard = (data) => {
     game.load(data.fen || game.fen());
 
     board = Chessboard('chessboard', {
@@ -87,50 +83,43 @@ function setupBoard(data) {
             console.log("Bot played:", data.bot_move);
         }, 600);
     }
-}
+};
 
-function removeHighlights() {
+const removeHighlights = () => {
     $('#chessboard .square-55d63').removeClass('highlight-square highlight-move highlight-capture selected-square king-in-check');
-}
+};
 
-function highlightCheck() {
+const highlightCheck = () => {
     $('#chessboard .square-55d63').removeClass('king-in-check');
     if (!game.in_check()) return;
 
     const turn = game.turn();
-    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
     for (let rank = 1; rank <= 8; rank++) {
-        for (let file of files) {
+        for (let file of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
             const square = file + rank;
             const piece = game.get(square);
-            if (piece && piece.type === 'k' && piece.color === turn) {
+            if (piece?.type === 'k' && piece.color === turn) {
                 $('#chessboard .square-' + square).addClass('king-in-check');
             }
         }
     }
-}
+};
 
-function highlightMoves(square) {
-    const moves = game.moves({ square: square, verbose: true });
+const highlightMoves = (square) => {
+    const moves = game.moves({ square, verbose: true });
     if (!moves.length) return;
 
     $('#chessboard .square-' + square).addClass('highlight-square');
-
     moves.forEach(m => {
         const target = $('#chessboard .square-' + m.to);
-        if (m.flags.includes('c')) {
-            target.addClass('highlight-capture');
-        } else {
-            target.addClass('highlight-move');
-        }
+        target.addClass(m.flags.includes('c') ? 'highlight-capture' : 'highlight-move');
     });
-}
+};
 
-async function handleSquareClick(square) {
+const handleSquareClick = (square) => {
     if (!selectedSquare) {
         const piece = game.get(square);
-        if (!piece) return;
-        if ((game.turn() === 'w' && piece.color === 'b') || (game.turn() === 'b' && piece.color === 'w')) return;
+        if (!piece || (game.turn() === 'w' && piece.color === 'b') || (game.turn() === 'b' && piece.color === 'w')) return;
 
         selectedSquare = square;
         removeHighlights();
@@ -149,16 +138,15 @@ async function handleSquareClick(square) {
 
     const piece = game.get(selectedSquare);
 
-    if (piece.type === 'p' &&
-        ((piece.color === 'w' && square.endsWith('8')) || (piece.color === 'b' && square.endsWith('1')))) {
+    if (piece.type === 'p' && ((piece.color === 'w' && square.endsWith('8')) || (piece.color === 'b' && square.endsWith('1')))) {
         showPromotionModal(selectedSquare, square, piece.color);
         return;
     }
 
     makeMove(selectedSquare, square, 'q');
-}
+};
 
-function showPromotionModal(from, to, color) {
+const showPromotionModal = (from, to, color) => {
     const modal = $('#promotionModal');
     modal.removeClass('hidden');
 
@@ -172,9 +160,9 @@ function showPromotionModal(from, to, color) {
         modal.addClass('hidden');
         makeMove(from, to, selectedPromotion);
     });
-}
+};
 
-function makeMove(from, to, promotion) {
+const makeMove = (from, to, promotion) => {
     const move = game.move({ from, to, promotion });
     if (!move) {
         selectedSquare = null;
@@ -190,16 +178,11 @@ function makeMove(from, to, promotion) {
     playMoveSound();
 
     sendMoveToServer(move);
-}
+};
 
-async function sendMoveToServer(move) {
+const sendMoveToServer = async (move) => {
     try {
-        const resp = await fetch("/make_move/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ game_id: gameId, move: move.san }),
-        });
-        const data = await resp.json();
+        const data = await apiCall("/make_move/", { game_id: gameId, move: move.san });
 
         if (!data.success) {
             alert("Move rejected: " + (data.detail || data.message));
@@ -218,11 +201,13 @@ async function sendMoveToServer(move) {
             if (data.bot_move) console.log("Bot played:", data.bot_move);
 
             if (data.game_over) {
-                let resultMsg = "";
-                if (data.result === "1-0") resultMsg = (playerColor === "white") ? "You win! 🎉" : "You lose. ❌";
-                else if (data.result === "0-1") resultMsg = (playerColor === "black") ? "You win! 🎉" : "You lose. ❌";
-                else if (data.result === "1/2-1/2") resultMsg = "Draw 🤝";
+                const results = {
+                    "1-0": playerColor === "white" ? "You win! 🎉" : "You lose. ❌",
+                    "0-1": playerColor === "black" ? "You win! 🎉" : "You lose. ❌",
+                    "1/2-1/2": "Draw 🤝"
+                };
 
+                let resultMsg = results[data.result] || "";
                 if (data.reason) resultMsg += " (" + data.reason.replaceAll("_", " ").toLowerCase() + ")";
                 setTimeout(() => alert(resultMsg), 600);
             }
@@ -233,17 +218,13 @@ async function sendMoveToServer(move) {
         board.position(game.fen());
         highlightCheck();
     }
-}
+};
 
-$(document).ready(function () {
+$(document).ready(() => {
     $('#chessboard').on('click', '.square-55d63', function () {
         const square = $(this).attr('data-square');
         handleSquareClick(square);
     });
 
-    if (gameId) {
-        loadGameById(gameId);
-    } else {
-        startNewGame();
-    }
+    gameId ? loadGameById(gameId) : startNewGame();
 });
