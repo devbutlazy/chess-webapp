@@ -9,12 +9,12 @@ if (playerColor === "random") {
     localStorage.setItem("color", playerColor);
 }
 
+
 let game = new Chess();
 let board = null;
 let selectedSquare = null;
 
 const moveSound = new Audio("/assets/sounds/move-self.mp3");
-
 const playMoveSound = () => {
     moveSound.currentTime = 0;
     moveSound.play().catch(() => { });
@@ -64,6 +64,7 @@ const loadGameById = async (id) => {
     setupBoard(data);
 };
 
+// --- Board & Highlights ---
 const setupBoard = (data) => {
     game.load(data.fen || game.fen());
 
@@ -137,7 +138,6 @@ const handleSquareClick = (square) => {
     }
 
     const piece = game.get(selectedSquare);
-
     if (piece.type === 'p' && ((piece.color === 'w' && square.endsWith('8')) || (piece.color === 'b' && square.endsWith('1')))) {
         showPromotionModal(selectedSquare, square, piece.color);
         return;
@@ -176,7 +176,6 @@ const makeMove = (from, to, promotion) => {
     removeHighlights();
     highlightCheck();
     playMoveSound();
-
     sendMoveToServer(move);
 };
 
@@ -206,7 +205,6 @@ const sendMoveToServer = async (move) => {
                     "0-1": playerColor === "black" ? "You win! 🎉" : "You lose. ❌",
                     "1/2-1/2": "Draw 🤝"
                 };
-
                 let resultMsg = results[data.result] || "";
                 if (data.reason) resultMsg += " (" + data.reason.replaceAll("_", " ").toLowerCase() + ")";
                 setTimeout(() => alert(resultMsg), 600);
@@ -220,11 +218,41 @@ const sendMoveToServer = async (move) => {
     }
 };
 
+const uiControls = () => {
+    const pauseButton = document.getElementById("pauseButton");
+    const pauseModal = document.getElementById("pauseModal");
+    const resumeGame = document.getElementById("resumeGame");
+    const exitGame = document.getElementById("exitGame");
+    const animationSpeed = document.getElementById("animationSpeed");
+    const animationBtn = document.getElementById("animationSpeed");
+    const speeds = ["Fast", "Normal", "Slow"];
+    let currentIndex = speeds.indexOf(animationBtn.textContent);
+
+    pauseButton.addEventListener("click", () => pauseModal.classList.remove("hidden"));
+    resumeGame.addEventListener("click", () => pauseModal.classList.add("hidden"));
+    exitGame.addEventListener("click", () => {
+        localStorage.removeItem("game_id");
+        window.location.href = "/";
+    });
+
+    animationSpeed.addEventListener("change", (e) => {
+        const speed = e.target.value;
+        localStorage.setItem("animationSpeed", speed.toLowerCase());
+    });
+
+    animationBtn.addEventListener("click", () => {
+        currentIndex = (currentIndex + 1) % speeds.length;
+        animationBtn.textContent = speeds[currentIndex];
+        localStorage.setItem("animationSpeed", speeds[currentIndex].toLowerCase());
+    });
+};
+
 $(document).ready(() => {
     $('#chessboard').on('click', '.square-55d63', function () {
-        const square = $(this).attr('data-square');
-        handleSquareClick(square);
+        handleSquareClick($(this).attr('data-square'));
     });
+
+    uiControls();
 
     gameId ? loadGameById(gameId) : startNewGame();
 });

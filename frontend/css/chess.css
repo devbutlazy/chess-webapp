@@ -73,14 +73,14 @@ body {
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.6);
-    z-index: 9999; 
+    z-index: 9999;
 }
 
 #promotionModal.hidden {
     display: none;
 }
 
-#promotionModal > div {
+#promotionModal>div {
     display: flex;
     gap: 12px;
     background-color: rgba(255, 255, 255, 0.1);
@@ -102,4 +102,172 @@ body {
     transform: scale(1.1);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
     border-radius: 8px;
+}
+
+.pause-btn,
+.pause-menu,
+.pause-menu h2,
+.pause-menu-btn,
+.pause-option,
+#pauseModal {
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+#pauseModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(94, 94, 94, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.pause-menu {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 20px 28px;
+    border-radius: 20px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
+    text-align: center;
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pause-menu h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    color: white;
+}
+
+.pause-menu-btn {
+    border: none;
+    padding: 10px;
+    font-size: 1rem;
+    color: white;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    background-size: 200% 200%;
+    font-weight: 600;
+}
+
+#resumeGame {
+    background: linear-gradient(135deg, #34d399, #059669);
+}
+
+#exitGame {
+    background: linear-gradient(135deg, #f87171, #dc2626);
+}
+
+.pause-menu-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.pause-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px 14px;
+    border-radius: 12px;
+    gap: 12px;
+    font-size: 0.95rem;
+    color: white;
+    transition: background 0.2s ease;
+}
+
+.pause-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.pause-option span {
+    font-weight: 500;
+}
+
+.toggle-btn {
+    min-width: 80px;
+    padding: 6px 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    background: #4a4a4a;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.toggle-btn:hover {
+    background: #616161;
+    transform: translateY(-1px);
+}
+
+.pause-option input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid #fff;
+    background: #4a4a4a;
+    cursor: pointer;
+    position: relative;
+    appearance: none;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.pause-option input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 10px;
+    border: solid transparent;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -50%) rotate(45deg);
+    transition: all 0.2s ease;
+}
+
+.pause-option input[type="checkbox"]:checked {
+    background: linear-gradient(135deg, #34d399, #059669);
+    border-color: #34d399;
+}
+
+.pause-option input[type="checkbox"]:checked::before {
+    border-color: white;
+}
+
+.pause-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: #5E5E5E;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    font-size: 22px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-weight: 600;
+}
+
+.pause-btn:hover {
+    background: #4a4a4a;
+}
+
+.hidden {
+    display: none !important;
 }
