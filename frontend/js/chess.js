@@ -9,10 +9,12 @@ if (playerColor === "random") {
     localStorage.setItem("color", playerColor);
 }
 
-
 let game = new Chess();
 let board = null;
 let selectedSquare = null;
+
+let isPaused = false;
+let pendingBotMove = null;
 
 const moveSound = new Audio("/assets/sounds/move-self.mp3");
 const playMoveSound = () => {
@@ -31,19 +33,16 @@ const apiCall = async (endpoint, data) => {
 
 const startNewGame = async () => {
     localStorage.removeItem("game_id");
-
     const data = await apiCall("/start_game/", {
         user_id: parseInt(userId),
         mode: "bot",
         difficulty: currentDifficulty,
         color: playerColor
     });
-
     if (!data.success) {
         alert("Could not start game: " + (data.detail || data.message));
         return;
     }
-
     gameId = String(data.game_id);
     localStorage.setItem("game_id", gameId);
     setupBoard(data);
@@ -51,12 +50,10 @@ const startNewGame = async () => {
 
 const loadGameById = async (id) => {
     const data = await apiCall("/load_game/", { game_id: id });
-
     if (!data.success) {
         alert("Could not load game: " + (data.detail || data.message));
         return;
     }
-
     gameId = String(data.game_id);
     localStorage.setItem("game_id", gameId);
     currentDifficulty = data.difficulty;
@@ -64,24 +61,21 @@ const loadGameById = async (id) => {
     setupBoard(data);
 };
 
-// --- Board & Highlights ---
 const setupBoard = (data) => {
     game.load(data.fen || game.fen());
-
     board = Chessboard('chessboard', {
         position: game.fen(),
         orientation: playerColor,
         draggable: false,
         pieceTheme: '/assets/chesspieces/{piece}.png'
     });
-
     if (data.bot_move) {
         setTimeout(() => {
-            game.load(data.fen);
-            board.position(data.fen);
-            highlightCheck();
-            playMoveSound();
-            console.log("Bot played:", data.bot_move);
+            if (isPaused) {
+                pendingBotMove = data;
+                return;
+            }
+            applyBotMove(data);
         }, 600);
     }
 };
@@ -93,7 +87,6 @@ const removeHighlights = () => {
 const highlightCheck = () => {
     $('#chessboard .square-55d63').removeClass('king-in-check');
     if (!game.in_check()) return;
-
     const turn = game.turn();
     for (let rank = 1; rank <= 8; rank++) {
         for (let file of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
@@ -109,7 +102,6 @@ const highlightCheck = () => {
 const highlightMoves = (square) => {
     const moves = game.moves({ square, verbose: true });
     if (!moves.length) return;
-
     $('#chessboard .square-' + square).addClass('highlight-square');
     moves.forEach(m => {
         const target = $('#chessboard .square-' + m.to);
@@ -118,10 +110,10 @@ const highlightMoves = (square) => {
 };
 
 const handleSquareClick = (square) => {
+    if (isPaused) return;
     if (!selectedSquare) {
         const piece = game.get(square);
         if (!piece || (game.turn() === 'w' && piece.color === 'b') || (game.turn() === 'b' && piece.color === 'w')) return;
-
         selectedSquare = square;
         removeHighlights();
         $('#chessboard .square-' + square).addClass('selected-square');
@@ -129,32 +121,27 @@ const handleSquareClick = (square) => {
         highlightCheck();
         return;
     }
-
     if (selectedSquare === square) {
         selectedSquare = null;
         removeHighlights();
         highlightCheck();
         return;
     }
-
     const piece = game.get(selectedSquare);
     if (piece.type === 'p' && ((piece.color === 'w' && square.endsWith('8')) || (piece.color === 'b' && square.endsWith('1')))) {
         showPromotionModal(selectedSquare, square, piece.color);
         return;
     }
-
     makeMove(selectedSquare, square, 'q');
 };
 
 const showPromotionModal = (from, to, color) => {
     const modal = $('#promotionModal');
     modal.removeClass('hidden');
-
     modal.find('.promotion-piece').each(function () {
         const pieceType = $(this).data('piece');
         $(this).attr('src', `/assets/chesspieces/${color}${pieceType.toUpperCase()}.png`);
     });
-
     $('.promotion-piece').off('click').on('click', function () {
         const selectedPromotion = $(this).data('piece');
         modal.addClass('hidden');
@@ -170,7 +157,6 @@ const makeMove = (from, to, promotion) => {
         highlightCheck();
         return;
     }
-
     board.position(game.fen());
     selectedSquare = null;
     removeHighlights();
@@ -182,39 +168,36 @@ const makeMove = (from, to, promotion) => {
 const sendMoveToServer = async (move) => {
     try {
         const data = await apiCall("/make_move/", { game_id: gameId, move: move.san });
-
-        if (!data.success) {
-            alert("Move rejected: " + (data.detail || data.message));
-            game.undo();
-            board.position(game.fen());
-            highlightCheck();
-            return;
-        }
-
         setTimeout(() => {
-            game.load(data.fen);
-            board.position(data.fen);
-            highlightCheck();
-            playMoveSound();
-
-            if (data.bot_move) console.log("Bot played:", data.bot_move);
-
-            if (data.game_over) {
-                const results = {
-                    "1-0": playerColor === "white" ? "You win! 🎉" : "You lose. ❌",
-                    "0-1": playerColor === "black" ? "You win! 🎉" : "You lose. ❌",
-                    "1/2-1/2": "Draw 🤝"
-                };
-                let resultMsg = results[data.result] || "";
-                if (data.reason) resultMsg += " (" + data.reason.replaceAll("_", " ").toLowerCase() + ")";
-                setTimeout(() => alert(resultMsg), 600);
+            if (isPaused) {
+                pendingBotMove = data;
+                return;
             }
+            applyBotMove(data);
         }, 500);
     } catch (err) {
         console.error("Server error:", err);
         game.undo();
         board.position(game.fen());
         highlightCheck();
+    }
+};
+
+const applyBotMove = (data) => {
+    game.load(data.fen);
+    board.position(data.fen);
+    highlightCheck();
+    playMoveSound();
+    if (data.bot_move) console.log("Bot played:", data.bot_move);
+    if (data.game_over) {
+        const results = {
+            "1-0": playerColor === "white" ? "You win! 🎉" : "You lose. ❌",
+            "0-1": playerColor === "black" ? "You win! 🎉" : "You lose. ❌",
+            "1/2-1/2": "Draw 🤝"
+        };
+        let resultMsg = results[data.result] || "";
+        if (data.reason) resultMsg += " (" + data.reason.replaceAll("_", " ").toLowerCase() + ")";
+        setTimeout(() => alert(resultMsg), 600);
     }
 };
 
@@ -228,8 +211,20 @@ const uiControls = () => {
     const speeds = ["Fast", "Normal", "Slow"];
     let currentIndex = speeds.indexOf(animationBtn.textContent);
 
-    pauseButton.addEventListener("click", () => pauseModal.classList.remove("hidden"));
-    resumeGame.addEventListener("click", () => pauseModal.classList.add("hidden"));
+    pauseButton.addEventListener("click", () => {
+        pauseModal.classList.remove("hidden");
+        isPaused = true;
+    });
+
+    resumeGame.addEventListener("click", () => {
+        pauseModal.classList.add("hidden");
+        isPaused = false;
+        if (pendingBotMove) {
+            applyBotMove(pendingBotMove);
+            pendingBotMove = null;
+        }
+    });
+
     exitGame.addEventListener("click", () => {
         localStorage.removeItem("game_id");
         window.location.href = "/";
@@ -251,8 +246,6 @@ $(document).ready(() => {
     $('#chessboard').on('click', '.square-55d63', function () {
         handleSquareClick($(this).attr('data-square'));
     });
-
     uiControls();
-
     gameId ? loadGameById(gameId) : startNewGame();
 });
