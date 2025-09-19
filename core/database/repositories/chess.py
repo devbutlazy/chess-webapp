@@ -1,6 +1,6 @@
 import random
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from core.database import engine
@@ -11,6 +11,8 @@ from typing import Self, List
 
 
 class ChessGameRepository(BaseRepository):
+    DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR {} KQkq - 0 1"
+
     def __init__(self):
         self.session: async_sessionmaker
 
@@ -62,9 +64,22 @@ class ChessGameRepository(BaseRepository):
 
     async def get_active_games(self, user_id: int) -> List[ChessGameORM]:
         async with self.session() as session:
+            default_fen_white = self.DEFAULT_FEN.format("w")
+            default_fen_black = self.DEFAULT_FEN.format("b")
+            
+            await session.execute(
+                delete(ChessGameORM).where(
+                    ChessGameORM.user_id == user_id,
+                    ChessGameORM.is_active == True,
+                    ChessGameORM.fen.in_([default_fen_white, default_fen_black])
+                )
+            )
+            await session.commit()
+            
             result = await session.execute(
                 select(ChessGameORM).where(
-                    ChessGameORM.user_id == user_id, ChessGameORM.is_active == True
+                    ChessGameORM.user_id == user_id, 
+                    ChessGameORM.is_active == True
                 )
             )
 
