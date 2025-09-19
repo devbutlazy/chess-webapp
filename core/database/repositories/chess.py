@@ -66,20 +66,19 @@ class ChessGameRepository(BaseRepository):
         async with self.session() as session:
             default_fen_white = self.DEFAULT_FEN.format("w")
             default_fen_black = self.DEFAULT_FEN.format("b")
-            
+
             await session.execute(
                 delete(ChessGameORM).where(
                     ChessGameORM.user_id == user_id,
                     ChessGameORM.is_active == True,
-                    ChessGameORM.fen.in_([default_fen_white, default_fen_black])
+                    ChessGameORM.fen.in_([default_fen_white, default_fen_black]),
                 )
             )
             await session.commit()
-            
+
             result = await session.execute(
                 select(ChessGameORM).where(
-                    ChessGameORM.user_id == user_id, 
-                    ChessGameORM.is_active == True
+                    ChessGameORM.user_id == user_id, ChessGameORM.is_active == True
                 )
             )
 
