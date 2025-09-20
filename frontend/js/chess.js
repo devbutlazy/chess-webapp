@@ -183,21 +183,47 @@ const sendMoveToServer = async (move) => {
     }
 };
 
+const showGameOverModal = (result, reason, difficulty) => {
+    const modal = document.getElementById("gameOverModal");
+    const title = document.getElementById("gameOverTitle");
+    const reasonEl = document.getElementById("gameOverReason");
+    const difficultyEl = document.getElementById("gameOverDifficulty");
+
+    modal.classList.remove("hidden");
+    modal.classList.remove("gameover-win", "gameover-lose", "gameover-draw");
+
+    let statusClass = "";
+    let titleText = "";
+
+    if (result === "1-0") {
+        titleText = playerColor === "white" ? "You Won" : "You Lost";
+        statusClass = playerColor === "white" ? "gameover-win" : "gameover-lose";
+    } else if (result === "0-1") {
+        titleText = playerColor === "black" ? "You Won" : "You Lost";
+        statusClass = playerColor === "black" ? "gameover-win" : "gameover-lose";
+    } else if (result === "1/2-1/2") {
+        titleText = "Draw";
+        statusClass = "gameover-draw";
+    }
+
+    modal.classList.add(statusClass);
+    title.textContent = titleText;
+    reasonEl.textContent = `Reason: ${reason.replaceAll("_", " ").toLowerCase()}`;
+    difficultyEl.textContent = `Difficulty: ${currentDifficulty}`;
+};
+
 const applyBotMove = (data) => {
     game.load(data.fen);
     board.position(data.fen);
     highlightCheck();
     playMoveSound();
+
     if (data.bot_move) console.log("Bot played:", data.bot_move);
+
     if (data.game_over) {
-        const results = {
-            "1-0": playerColor === "white" ? "You win! 🎉" : "You lose. ❌",
-            "0-1": playerColor === "black" ? "You win! 🎉" : "You lose. ❌",
-            "1/2-1/2": "Draw 🤝"
-        };
-        let resultMsg = results[data.result] || "";
-        if (data.reason) resultMsg += " (" + data.reason.replaceAll("_", " ").toLowerCase() + ")";
-        setTimeout(() => alert(resultMsg), 600);
+        setTimeout(() => {
+            showGameOverModal(data.result, data.reason || "Unknown", currentDifficulty);
+        }, 600);
     }
 };
 
@@ -205,7 +231,7 @@ const uiControls = () => {
     const pauseButton = document.getElementById("pauseButton");
     const pauseModal = document.getElementById("pauseModal");
     const resumeGame = document.getElementById("resumeGame");
-    const exitGame = document.getElementById("exitGame");
+    const exitButtons = document.querySelectorAll("#pauseMenuExitGame, #gameOverExitGame");
     const animationSpeed = document.getElementById("animationSpeed");
     const animationBtn = document.getElementById("animationSpeed");
     const speeds = ["Fast", "Normal", "Slow"];
@@ -225,9 +251,11 @@ const uiControls = () => {
         }
     });
 
-    exitGame.addEventListener("click", () => {
-        localStorage.removeItem("game_id");
-        window.location.href = "/";
+    exitButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            localStorage.removeItem("game_id");
+            window.location.href = "/";
+        });
     });
 
     animationSpeed.addEventListener("change", (e) => {

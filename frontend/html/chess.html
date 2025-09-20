@@ -12,13 +12,13 @@
 <body>
     <div id="chessboard"></div>
 
-    <button id="pauseButton" class="pause-btn">⏸</button>
+    <button id="pauseButton" class="pause-btn">||</button>
 
     <div id="pauseModal" class="hidden">
         <div class="pause-menu">
             <h2>Game Paused</h2>
             <button class="pause-menu-btn" id="resumeGame">Resume</button>
-            <button class="pause-menu-btn" id="exitGame">Exit</button>
+            <button class="pause-menu-btn" id="pauseMenuExitGame">Exit</button>
 
             <div class="pause-option">
                 <span>Animation Speed</span>
@@ -32,6 +32,14 @@
         </div>
     </div>
 
+    <div id="gameOverModal" class="hidden">
+        <div class="gameover-menu">
+            <h2 id="gameOverTitle">Game Over</h2>
+            <p id="gameOverReason" class="gameover-reason"></p>
+            <p id="gameOverDifficulty" class="gameover-difficulty"></p>
+            <button class="gameover-exit-btn" id="gameOverExitGame">Exit</button>
+        </div>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>

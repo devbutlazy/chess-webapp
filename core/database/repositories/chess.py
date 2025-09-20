@@ -61,7 +61,7 @@ class ChessGameRepository(BaseRepository):
             await session.commit()
             await session.refresh(new_game)
             return new_game
-
+        
     async def get_active_games(self, user_id: int) -> List[ChessGameORM]:
         async with self.session() as session:
             default_fen_white = self.DEFAULT_FEN.format("w")
