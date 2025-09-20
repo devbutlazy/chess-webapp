@@ -308,7 +308,20 @@ input,
     width: 300px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px; 
+}
+
+.gameover-reason,
+.gameover-difficulty {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #f1f1f1;
+    line-height: 1.5;
+    letter-spacing: 0.3px;
+    text-align: center;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
 }
 
 #gameOverTitle {
@@ -318,18 +331,18 @@ input,
     color: white;
 }
 
-.gameover-reason,
+.gameover-reason {
+    margin-bottom: 1px;
+}
+
 .gameover-difficulty {
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #f1f1f1;
-    margin: 2px 0;
-    line-height: 1.5;
-    letter-spacing: 0.3px;
-    text-align: center;
-    padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+.gameover-analyze-btn,
+.gameover-exit-btn {
+    margin-top: 2px; 
 }
 
 .gameover-btn {
@@ -377,4 +390,18 @@ input,
 .gameover-exit-btn:hover {
     transform: translateY(-2px);
     opacity: 0.9;
+}
+
+.gameover-analyze-btn {
+    border: none;
+    padding: 10px;
+    font-size: 1rem;
+    color: white;
+    border-radius: 12px;
+    cursor: not-allowed;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    background-size: 200% 200%;
+    font-weight: 600;
+    background: linear-gradient(135deg, #34d399, #059669);
+    opacity: 0.6;
 }

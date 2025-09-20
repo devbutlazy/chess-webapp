@@ -16,6 +16,18 @@ let selectedSquare = null;
 let isPaused = false;
 let pendingBotMove = null;
 
+const clickSound = new Audio("/assets/sounds/click.mp3");
+clickSound.preload = "auto";
+
+const playClickSound = () => {
+    try {
+        clickSound.currentTime = 0;
+        clickSound.play();
+    } catch (err) {
+        console.warn("Sound play blocked:", err);
+    }
+};
+
 const moveSound = new Audio("/assets/sounds/move-self.mp3");
 const playMoveSound = () => {
     moveSound.currentTime = 0;
@@ -212,6 +224,7 @@ const showGameOverModal = (result, reason, difficulty) => {
     difficultyEl.textContent = `Difficulty: ${currentDifficulty}`;
 };
 
+
 const applyBotMove = (data) => {
     game.load(data.fen);
     board.position(data.fen);
@@ -232,17 +245,20 @@ const uiControls = () => {
     const pauseModal = document.getElementById("pauseModal");
     const resumeGame = document.getElementById("resumeGame");
     const exitButtons = document.querySelectorAll("#pauseMenuExitGame, #gameOverExitGame");
-    const animationSpeed = document.getElementById("animationSpeed");
     const animationBtn = document.getElementById("animationSpeed");
     const speeds = ["Fast", "Normal", "Slow"];
     let currentIndex = speeds.indexOf(animationBtn.textContent);
 
+    const toggleEffects = document.getElementById("toggleEffects");
+
     pauseButton.addEventListener("click", () => {
+        playClickSound();
         pauseModal.classList.remove("hidden");
         isPaused = true;
     });
 
     resumeGame.addEventListener("click", () => {
+        playClickSound();
         pauseModal.classList.add("hidden");
         isPaused = false;
         if (pendingBotMove) {
@@ -253,20 +269,22 @@ const uiControls = () => {
 
     exitButtons.forEach(btn => {
         btn.addEventListener("click", () => {
+            playClickSound();
             localStorage.removeItem("game_id");
             window.location.href = "/";
         });
     });
 
-    animationSpeed.addEventListener("change", (e) => {
-        const speed = e.target.value;
-        localStorage.setItem("animationSpeed", speed.toLowerCase());
-    });
-
     animationBtn.addEventListener("click", () => {
+        playClickSound();
         currentIndex = (currentIndex + 1) % speeds.length;
         animationBtn.textContent = speeds[currentIndex];
         localStorage.setItem("animationSpeed", speeds[currentIndex].toLowerCase());
+    });
+
+    toggleEffects.addEventListener("click", () => {
+        playClickSound();
+        localStorage.setItem("soundEffects", toggleEffects.checked);
     });
 };
 
