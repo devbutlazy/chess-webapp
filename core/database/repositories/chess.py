@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from core.database import engine
 from core.database.repositories.base import BaseRepository
-from core.database.models.user import ChessGameORM, UserORM
+from core.database.models.chess import ChessGameORM
 
 from typing import Self, List
 

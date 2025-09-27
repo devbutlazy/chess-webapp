@@ -1,4 +1,5 @@
 from typing import Tuple, List
+
 from sqlalchemy.orm import DeclarativeBase
 
 
