@@ -8,6 +8,7 @@ class ChessGameForm(BaseModel):
     mode: Literal["bot", "user"]
     difficulty: Optional[Literal["easy", "medium", "hard", "impossible"]] = None
     color: Optional[Literal["white", "black", "random"]] = "white"
+    duration: Optional[Literal[1, 3, 5, 10]] = 5
 
 
 class MoveForm(BaseModel):

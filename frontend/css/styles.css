@@ -73,11 +73,27 @@ h1 {
 }
 
 .status-green {
-    color: #34d399;
+    background: linear-gradient(135deg, #34d399, #059669) !important;
+    color: #fff !important;
 }
 
 .status-red {
     color: #f87171;
+}
+
+.btn-yellow {
+    background: linear-gradient(135deg, #facc15, #d97706);
+    color: #fff;
+}
+
+.btn-green {
+    background: linear-gradient(135deg, #34d399, #059669);
+    color: #fff;
+}
+
+.btn-blue {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
 }
 
 .overlay {
