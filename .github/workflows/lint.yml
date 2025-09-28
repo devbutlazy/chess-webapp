@@ -1,0 +1,51 @@
+name: Lint & Format
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.event.pull_request.title, 'format(') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      
+      - name: Install linters
+        run: |
+          pip install black isort
+
+      - name: Run isort
+        run: isort .
+
+      - name: Run black
+        run: black .
+
+      - name: Commit changes if needed
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          COMMIT_HASH=$(echo "${{ github.sha }}" | cut -c1-7)
+
+          git add -A
+
+          if ! git diff --cached --quiet; then
+            git commit -m "format($COMMIT_HASH): autoformat with black & isort"
+            git push
+          else
+            echo "Nothing to format, everything looks nice."
