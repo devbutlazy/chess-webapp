@@ -3,9 +3,9 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from core.database import engine
-from core.database.repositories.base import BaseRepository
-from core.database.models.user import UserORM
+from backend.database import engine
+from backend.database.repositories.base import BaseRepository
+from backend.database.models.user import UserORM
 
 from typing import Self, Type
 

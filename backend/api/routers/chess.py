@@ -3,9 +3,10 @@ import random
 import chess
 from fastapi import APIRouter, HTTPException
 
-from core.api.schemas.schemas import ChessGameForm, MoveForm, LoadGameForm
-from core.api.engine import GameEngine
-from core.database.repositories.chess import ChessGameRepository
+from backend.api.schemas.game import ChessGameForm
+from backend.api.schemas.move import MoveForm, LoadGameForm
+from backend.services.engine import GameEngine
+from backend.database.repositories.chess import ChessGameRepository
 
 router = APIRouter()
 

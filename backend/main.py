@@ -7,9 +7,9 @@ from fastapi.staticfiles import StaticFiles
 from uvicorn.config import Config
 from uvicorn.server import Server
 
-from core.api.routers.basic import router as misc_router
-from core.api.routers.chess import router as chess_router
-from core.database import init_db
+from backend.api.routers.basic import router as misc_router
+from backend.api.routers.chess import router as chess_router
+from backend.database import init_db
 
 
 def init_fastapi_routers(app: FastAPI) -> None:

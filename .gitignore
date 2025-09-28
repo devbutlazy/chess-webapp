@@ -1,7 +1,81 @@
-*/__pycache__
-*.db
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.pdb
+
+# Virtual Environments
 .env
-*__pycache__/
-*.idea/
-*venv/
+.venv/
+venv/
+ENV/
+env/
+
+# Environment & Config
+*.env
+*.env.local
+*.env.test
+*.env.prod
+config.json
+secrets.json
+
+# Database & Migrations
+*.db
+*.sqlite3
+migrations/versions/
+
+# Logs & Caches
+*.log
+*.out
+*.pid
+*.seed
+*.pid.lock
+cache/
+*.pycache/
+__pypackages__/
+
+# Frontend Build
+node_modules/
+dist/
+build/
+*.lock
+*.map
+
+# Editors / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS Specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Stockfish Engine
 stockfish/
+*.exe
+*.bin
+*.nnue
+
+# Coverage & Testing
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+pytestdebug.log
+
+# Temporary / Backup
+*.bak
+*.tmp
+*.orig
+*.rej

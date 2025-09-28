@@ -3,9 +3,9 @@ import random
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from core.database import engine
-from core.database.repositories.base import BaseRepository
-from core.database.models.chess import ChessGameORM
+from backend.database import engine
+from backend.database.repositories.base import BaseRepository
+from backend.database.models.chess import ChessGameORM
 
 from typing import Self, List
 

@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from core.api.schemas.schemas import CheckUserForm
-from core.database.repositories.user import UserRepository
+from backend.api.schemas.user import CheckUserForm
+from backend.database.repositories.user import UserRepository
 
 router = APIRouter()
 

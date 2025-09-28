@@ -1,11 +1,12 @@
-asyncpg
-psycopg2-binary
+fastapi==0.117.1
+uvicorn==0.37.0
 
-fastapi
-uvicorn
-sqlalchemy
-stockfish
-python-chess
+sqlalchemy==2.0.41
+asyncpg==0.30.0        
+psycopg2-binary==2.9.10  
 
-pydantic
-pydantic-settings
+stockfish==3.28.0
+python-chess==1.999
+
+pydantic==2.11.9
+pydantic-settings==2.11.0

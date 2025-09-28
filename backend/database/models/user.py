@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import BigInteger, DateTime, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database.models.base import Base
+from backend.database.models.base import Base
 
 if TYPE_CHECKING:
-    from core.database.models.chess import ChessGameORM
+    from backend.database.models.chess import ChessGameORM
 
 
 class UserORM(Base):

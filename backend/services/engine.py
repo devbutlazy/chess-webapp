@@ -1,10 +1,10 @@
 from typing import Dict
 
+import chess
 from fastapi import HTTPException
 from stockfish import Stockfish
-import chess
 
-from core.config.config import settings
+from backend.config.config import settings
 
 DIFFICULTY_PRESETS: Dict[str, dict] = {
     "easy": {"skill": 1, "depth": 8, "time": 0.1},

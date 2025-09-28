@@ -14,11 +14,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database.models.base import Base
+from backend.database.models.base import Base
 
 
 if TYPE_CHECKING:
-    from core.database.models.user import UserORM
+    from backend.database.models.user import UserORM
 
 
 class ChessGameORM(Base):
