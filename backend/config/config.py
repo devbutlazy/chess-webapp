@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     DB_PASS: str  # Database password
 
     STOCKFISH_PATH: str  # Path to Stokfish binary
+    ENDPOINT_URL: str # API endpoint URL
 
     @property
     def DB_URL(self) -> str:

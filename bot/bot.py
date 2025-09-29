@@ -33,7 +33,7 @@ async def command_start_handler(message: Message) -> None:
             [
                 InlineKeyboardButton(
                     text="Open ChessWebApp",
-                    web_app=WebAppInfo(url="https://google.com"), 
+                    web_app=WebAppInfo(url=settings.ENDPOINT_URL), 
                 )
             ],
             [InlineKeyboardButton(text="Join Channel", url="https://t.me/dev_bin")],

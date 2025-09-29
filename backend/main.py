@@ -7,9 +7,10 @@ from fastapi.staticfiles import StaticFiles
 from uvicorn.config import Config
 from uvicorn.server import Server
 
-from backend.api.routers.basic import router as misc_router
-from backend.api.routers.chess import router as chess_router
 from backend.database import init_db
+from backend.api.routers.user import router as user_router
+from backend.api.routers.pages import router as pages_router
+from backend.api.routers.chess.bot import router as bot_chess_router
 
 
 def init_fastapi_routers(app: FastAPI) -> None:
@@ -19,23 +20,9 @@ def init_fastapi_routers(app: FastAPI) -> None:
     :param app: The FastAPI application.
     :return: None
     """
-    app.include_router(misc_router)
-    app.include_router(chess_router)
-
-
-# async def start_telegram_bot() -> None:
-#     """
-#     Start the Telegram bot.
-
-#     :return: None
-#     """
-#     bot = Bot(
-#         token=settings.BOT_TOKEN,
-#         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
-#     )
-#     dp = Dispatcher()
-
-#     await dp.start_polling(bot)
+    app.include_router(user_router)
+    app.include_router(pages_router)
+    app.include_router(bot_chess_router)
 
 
 async def main() -> None:
@@ -44,7 +31,6 @@ async def main() -> None:
     app.mount("/js", StaticFiles(directory="frontend/js"), name="js")
     app.mount("/css", StaticFiles(directory="frontend/css"), name="css")
     app.mount("/assets", StaticFiles(directory="frontend/assets"), name="assets")
-    # app.mount("/", StaticFiles(directory="frontend/html", html=True), name="html")
 
     config = Config(
         app=app,
@@ -55,7 +41,7 @@ async def main() -> None:
     server = Server(config=config)
 
     init_fastapi_routers(app)
-    await asyncio.gather(init_db(), server.serve())  # start_telegram_bot()
+    await asyncio.gather(init_db(), server.serve())
 
 
 if __name__ == "__main__":

@@ -86,7 +86,7 @@ const startGame = () => {
     localStorage.setItem("color", selectedColor);
     localStorage.setItem("time", selectedTime);
     localStorage.removeItem("game_id");
-    window.location.href = "/chess.html";
+    window.location.href = "/chess";
 };
 
 const formatLastPlayed = ts => new Date(ts).toLocaleString("en-US", { hour: "2-digit", minute: "2-digit" });
@@ -102,7 +102,7 @@ const showLoadGameMenu = async () => {
         const card = document.createElement("div");
         card.className = "saved-game-card";
         card.innerHTML = `<div class="game-header"><span class="game-id">Game #${g.game_id}</span><span class="game-color ${g.player_color.toLowerCase()}">${g.player_color}</span></div><ul class="game-details"><li><span class="label">Difficulty:</span> ${g.difficulty}</li><li><span class="label">Last Played:</span> ${formatLastPlayed(g.last_played)} (UTC)</li></ul>`;
-        card.addEventListener("click", () => { playClickSound(); localStorage.setItem("game_id", g.game_id); window.location.href = "/chess.html"; });
+        card.addEventListener("click", () => { playClickSound(); localStorage.setItem("game_id", g.game_id); window.location.href = "/chess"; });
         container.appendChild(card);
     });
     const backBtn = document.createElement("button");
@@ -140,7 +140,11 @@ const init = async () => {
     currentUser = user;
     localStorage.setItem("user_id", user.id);
     try {
-        const resp = await fetch("/check_user/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: user.id }) });
+        const resp = await fetch("/user/check", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: user.id })
+        });
         const result = await resp.json();
         if (!result.allowed) { app.innerHTML = `<h1>❌ ${result.message}</h1>`; return; }
         showMainMenu(user);
