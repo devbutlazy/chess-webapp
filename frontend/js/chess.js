@@ -45,7 +45,7 @@ const apiCall = async (endpoint, data) => {
 
 const startNewGame = async () => {
     localStorage.removeItem("game_id");
-    const data = await apiCall("/bot/start", {
+    const data = await apiCall("/chess/bot/start", {
         user_id: parseInt(userId),
         mode: "bot",
         difficulty: currentDifficulty,
@@ -61,7 +61,7 @@ const startNewGame = async () => {
 };
 
 const loadGameById = async (id) => {
-    const data = await apiCall("/bot/load", { game_id: id });
+    const data = await apiCall("/chess/bot/load", { game_id: id });
     if (!data.success) {
         alert("Could not load game: " + (data.detail || data.message));
         return;
@@ -179,7 +179,7 @@ const makeMove = (from, to, promotion) => {
 
 const sendMoveToServer = async (move) => {
     try {
-        const data = await apiCall("/bot/move", { game_id: gameId, move: move.san });
+        const data = await apiCall("/chess/bot/move", { game_id: gameId, move: move.san });
         setTimeout(() => {
             if (isPaused) {
                 pendingBotMove = data;

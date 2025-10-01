@@ -11,7 +11,7 @@ from backend.database import init_db
 from backend.api.routers.user import router as user_router
 from backend.api.routers.pages import router as pages_router
 from backend.api.routers.chess.bot import router as bot_chess_router
-
+from backend.api.routers.chess.bot import router as user_chess_router
 
 def init_fastapi_routers(app: FastAPI) -> None:
     """
@@ -23,6 +23,7 @@ def init_fastapi_routers(app: FastAPI) -> None:
     app.include_router(user_router)
     app.include_router(pages_router)
     app.include_router(bot_chess_router)
+    app.include_router(user_chess_router)
 
 
 async def main() -> None:

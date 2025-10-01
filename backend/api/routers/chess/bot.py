@@ -13,7 +13,7 @@ from backend.api.schemas.move import (
 from backend.services.engine import GameEngine
 from backend.database.repositories.chess import ChessGameRepository
 
-router = APIRouter(prefix="/bot", tags=["Chess against Stockfish"])
+router = APIRouter(prefix="/chess/bot", tags=["Chess against Stockfish"])
 
 @router.post("/start", response_model=ChessGameResponse)
 async def start_game(data: ChessGameRequest):
